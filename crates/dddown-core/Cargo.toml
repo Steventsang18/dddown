@@ -1,0 +1,11 @@
+[package]
+name = "dddown-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "dddown_core"
+
+[dependencies]
+serde = { workspace = true }
+walkdir = { workspace = true }

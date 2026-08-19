@@ -1,0 +1,295 @@
+/* ========== Preview Typography ========== */
+.preview {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 44px 48px 96px;
+  font-size: 16px;
+  line-height: 1.85;
+  font-family: var(--font-body, var(--font-serif));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
+  hanging-punctuation: allow-end;
+}
+
+.preview h1 {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  line-height: 1.3;
+  margin: 0 0 24px;
+}
+
+/* 首个子元素是标题时不需要额外上间距 */
+.preview > :first-child { margin-top: 0; }
+
+.preview h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  line-height: 1.35;
+  margin: 44px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.preview h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--ink-2);
+}
+
+.preview h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+  color: var(--ink-2);
+}
+
+.preview p {
+  margin: 0 0 20px;
+  text-align: justify;
+  text-justify: inter-ideograph;
+  text-align-last: left;
+  letter-spacing: .01em;
+}
+
+.preview ul, .preview ol {
+  margin: 0 0 18px;
+  padding-left: 1.5em;
+}
+
+.preview li {
+  margin-bottom: .4em;
+  line-height: 1.75;
+}
+
+.preview li > ul, .preview li > ol { margin: .3em 0 .3em; }
+.preview li > p { margin-bottom: .5em; }
+
+.preview blockquote {
+  margin: 8px 0 22px;
+  padding: 4px 0 4px 24px;
+  border-left: 2px solid var(--ink);
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--bg-soft) 50%, transparent);
+  border-radius: 0 var(--r-s) var(--r-s) 0;
+  transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+}
+
+.preview pre {
+  margin: 10px 0 24px;
+  padding: 22px 24px;
+  padding-top: 38px;
+  background: var(--bg-code, #1E1D1A);
+  color: #E8E6E1;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  overflow-x: auto;
+  position: relative;
+  transition: background var(--t-base) var(--ease);
+}
+
+.preview pre::before {
+  content: attr(lang);
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #6B6860;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(232,230,225,.08);
+}
+
+.preview pre[data-lang]::before {
+  content: attr(data-lang);
+}
+
+.preview code.inline {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  background: var(--bg-soft);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--accent);
+  border: 1px solid var(--line);
+}
+
+.preview strong { font-weight: 700; }
+.preview em { font-style: italic; }
+
+.preview hr {
+  border: none;
+  height: 1px;
+  margin: 34px 0;
+  background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--line-strong) 80%, transparent);
+}
+
+/* ========== 图片 ========== */
+.preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px auto;
+  border-radius: var(--r-s);
+  box-shadow: var(--shadow-sm);
+}
+.preview img + br + em,
+.preview img + em {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  font-style: normal;
+}
+
+.preview a {
+  color: var(--accent);
+  text-decoration: none;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--t-base) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.preview a:hover { background-size: 100% 1px; }
+
+/* ========== Table ========== */
+.preview .table-wrap {
+  margin: 10px 0 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(28,27,25,.04));
+  transition: border-color var(--t-base) var(--ease);
+}
+
+.preview table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.65; }
+
+.preview th {
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 13px;
+  letter-spacing: .01em;
+}
+
+.preview td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.preview tr:last-child td { border-bottom: none; }
+
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* ========== Task List ========== */
+.preview ul.tasks { list-style: none; margin: 0 0 22px; padding: 0; }
+.preview ul.tasks li {
+  margin: 0 0 10px;
+  padding-left: 28px;
+  position: relative;
+  text-align: justify;
+}
+.preview ul.tasks input[type="checkbox"] {
+  position: absolute;
+  left: 0; top: 5px;
+  width: 15px; height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ========== Section 分组（长文渲染） ========== */
+.preview .preview-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+/* ========== GitHub Callout ========== */
+.preview .markdown-alert {
+  margin: 10px 0 22px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-m);
+  background: var(--accent-soft);
+  font-size: 15px;
+}
+.preview .markdown-alert .markdown-alert-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.preview .markdown-alert p { margin: 0 0 6px; }
+.preview .markdown-alert p:last-child { margin: 0; }
+.preview .markdown-alert-tip {
+  border-left-color: var(--ok);
+  background: var(--ok-soft);
+}
+.preview .markdown-alert-warning {
+  border-left-color: var(--warn);
+  background: var(--warn-soft);
+}
+.preview .markdown-alert-caution {
+  border-left-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+/* ========== Shiki 代码高亮 ========== */
+.preview pre.shiki { padding-top: 34px; }
+.preview pre.shiki code {
+  display: block;
+  background: transparent;
+  font-family: var(--font-mono);
+}
+
+/* ========== KaTeX 数学 ========== */
+.preview span[data-katex] {
+  color: var(--ink);
+  transition: color var(--t-base) var(--ease);
+}
+.preview .katex { font-size: 1.05em; }
+.preview .katex-display {
+  margin: 18px 0;
+  padding: 6px 0;
+}
+
+/* ========== Mermaid 图表 ========== */
+.preview .mermaid {
+  margin: 10px 0 24px;
+  display: flex;
+  justify-content: center;
+}
+.preview .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+.preview pre.mermaid-failed { border: 1px solid var(--danger); }
+.preview .mermaid-error {
+  margin: -16px 0 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--danger);
+}
+
+/* ========== Wikilink ========== */
+.preview a.wikilink {
+  color: var(--accent);
+  background: none;
+  border-bottom: 1px dashed var(--accent);
+  cursor: pointer;
+}
+.preview a.wikilink:hover { background: var(--accent-soft); }

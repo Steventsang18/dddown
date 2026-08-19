@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dddown</title>
+  <link rel="stylesheet" href="/src/styles/editor.css">
+  <link rel="stylesheet" href="/src/styles/preview.css">
+</head>
+<body class="theme-book font-serif">
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-tabs">
+        <span class="sidebar-tab active" id="tabFiles">文件</span>
+        <span class="sidebar-tab" id="tabToc">大纲</span>
+        <span class="sidebar-collapse" id="sidebarCollapse" title="收起侧栏">«</span>
+      </div>
+      <div class="sidebar-head">
+        <input id="newFileInput" type="text" placeholder="新建笔记.md" spellcheck="false">
+      </div>
+      <nav class="sidebar-tree" id="fileTree"></nav>
+      <nav class="sidebar-toc" id="tocList" hidden></nav>
+    </aside>
+    <section class="pane editor-pane">
+      <div class="format-detect-strip" id="formatDetectStrip"></div>
+      <div class="format-trigger-zone" id="formatTriggerZone"></div>
+      <div class="format-toolbar" id="formatToolbar">
+        <div class="format-pin-btn" id="formatPinBtn" title="固定工具栏"></div>
+        <div class="fmt-btn" data-action="bold" title="加粗">B</div>
+        <div class="fmt-btn" data-action="italic" title="斜体"><em>I</em></div>
+        <div class="fmt-divider"></div>
+        <div class="fmt-btn" data-action="h1" title="标题 1">H1</div>
+        <div class="fmt-btn" data-action="h2" title="标题 2">H2</div>
+        <div class="fmt-btn" data-action="h3" title="标题 3">H3</div>
+        <div class="fmt-divider"></div>
+        <div class="fmt-btn" data-action="ul" title="无序列表">•</div>
+        <div class="fmt-btn" data-action="ol" title="有序列表">1.</div>
+        <div class="fmt-btn" data-action="quote" title="引用">❝</div>
+        <div class="fmt-divider"></div>
+        <div class="fmt-btn" data-action="code" title="行内代码">&lt;&gt;</div>
+        <div class="fmt-btn" data-action="codeblock" title="代码块">{}</div>
+        <div class="fmt-btn" data-action="link" title="链接">🔗</div>
+        <div class="fmt-btn" data-action="image" title="图片">🖼</div>
+        <div class="fmt-btn" data-action="hr" title="分隔线">—</div>
+        <div class="syntax-btn-bottom">
+          <div class="fmt-btn" data-action="syntax" title="语法速查">语法</div>
+        </div>
+      </div>
+      <div class="editor-scroll">
+        <div id="editor"></div>
+      </div>
+    </section>
+    <div class="divider-wrap" id="dividerWrap">
+      <div class="divider-hover-zone" id="dividerHoverZone"></div>
+      <div class="collapse-btn" id="collapseBtn" title="收缩预览栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 6 15 12 9 18"></polyline>
+        </svg>
+      </div>
+    </div>
+    <section class="pane preview-pane" id="previewPane">
+      <div class="preview" id="preview"></div>
+    </section>
+  </div>
+
+  <div class="search-panel" id="searchPanel" hidden>
+    <input id="searchInput" type="text" placeholder="搜索笔记" spellcheck="false" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <footer class="statusbar">
+    <span class="btn" id="sidebarBtn" title="切换侧栏">文件</span>
+    <span class="file-name" id="fileName">untitled.md</span>
+    <span class="save-state" id="saveState">
+      <span class="dot"></span>
+      <span id="saveText">ready</span>
+    </span>
+    <span class="spacer"></span>
+    <span id="cursorPos">1:1</span>
+    <span id="wordCount">0 字</span>
+    <span class="btn" id="themeBtn" title="切换主题">书卷</span>
+    <span class="btn" id="fontBtn" title="切换字体">宋体</span>
+    <span class="btn" id="focusBtn" title="专注模式 ⌘⇧D">专注</span>
+    <span class="btn" id="settingsBtn" title="设置">设置</span>
+    <div class="settings-dropdown" id="settingsDropdown">
+      <div class="dropdown-item" id="menuCredentials">
+        <span class="dropdown-icon">🔐</span>
+        <span>凭证</span>
+      </div>
+      <div class="dropdown-divider"></div>
+      <div class="dropdown-item" id="menuExport">
+        <span class="dropdown-icon">📄</span>
+        <span>导出 HTML</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal-mask" id="tokenModal" hidden>
+    <div class="modal">
+      <h3>设置访问密码</h3>
+      <p class="modal-desc">设置固定密码后，服务重启时访问地址不再变化，收藏的链接可永久使用。若不设置，每次启动会随机生成临时密码。</p>
+      <input id="tokenInput" type="text" placeholder="输入新密码" spellcheck="false" autocomplete="off">
+      <p class="modal-hint" id="tokenHint">要求：8-64 位，仅限字母、数字、连字符（-）和下划线（_）</p>
+      <div class="modal-actions">
+        <span class="modal-btn" id="tokenCancelBtn">取消</span>
+        <span class="modal-btn primary" id="tokenSaveBtn">保存</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="syntaxModal" hidden>
+    <div class="modal syntax-modal">
+      <h3>Markdown 语法速查</h3>
+      <div class="syntax-body">
+        <div class="syntax-group">
+          <h4>标题</h4>
+          <div class="syntax-row"><code># ~ ###### 标题</code><span>一至六级标题</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>列表</h4>
+          <div class="syntax-row"><code>- 项目</code><span>无序列表</span></div>
+          <div class="syntax-row"><code>1. 项目</code><span>有序列表</span></div>
+          <div class="syntax-row"><code>- [ ] 待办</code><span>任务清单（[x] 为已完成）</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>引用</h4>
+          <div class="syntax-row"><code>&gt; 引用内容</code><span>块引用</span></div>
+          <div class="syntax-row"><code>&gt; [!NOTE] 内容</code><span>提示框（NOTE/TIP/WARNING/IMPORTANT/CAUTION）</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>行内样式</h4>
+          <div class="syntax-row"><code>**粗体**  *斜体*</code><span>加粗与倾斜</span></div>
+          <div class="syntax-row"><code>~~删除线~~</code><span>删除线</span></div>
+          <div class="syntax-row"><code>`行内代码`</code><span>行内代码</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>代码与图表</h4>
+          <div class="syntax-row"><code>```语言</code><span>代码块，写语言名即高亮</span></div>
+          <div class="syntax-row"><code>```mermaid</code><span>流程图 / 时序图 / 甘特图</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>表格</h4>
+          <div class="syntax-row"><code>| 表头 | 表头 |</code><span>第二行写 | --- | --- | 即成表格</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>数学公式</h4>
+          <div class="syntax-row"><code>$E = mc^2$</code><span>行内公式</span></div>
+          <div class="syntax-row"><code>$$ 公式 $$</code><span>块级公式，独占一行</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>链接与图片</h4>
+          <div class="syntax-row"><code>[文字](https://…)</code><span>链接</span></div>
+          <div class="syntax-row"><code>![说明](图片路径)</code><span>图片</span></div>
+          <div class="syntax-row"><code>[[笔记名]]</code><span>双链，点击跳转同名笔记</span></div>
+        </div>
+        <div class="syntax-group">
+          <h4>其他</h4>
+          <div class="syntax-row"><code>---</code><span>分割线（独占一行）</span></div>
+          <div class="syntax-row"><code>&lt;https://example.com&gt;</code><span>自动链接</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <span class="modal-btn" id="syntaxCloseBtn">关闭</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

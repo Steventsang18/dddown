@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dddown · 快速开始 / Quick Start</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg-soft: #f7f7f9; --bg-code: #f4f4f7;
+    --ink: #1d1d22; --ink-2: #55555e; --ink-3: #8b8b95;
+    --accent: #5b5bdc; --accent-soft: rgba(91, 91, 220, .08);
+    --line: #e7e7ec; --shadow: 0 1px 2px rgba(20,20,40,.04), 0 8px 24px rgba(20,20,40,.05);
+    --serif: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+    --sans: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+    --ease: cubic-bezier(.33, 1, .68, 1);
+  }
+  html.dark {
+    --bg: #171a21; --bg-soft: #1c2029; --bg-code: #12141a;
+    --ink: #dfe2ea; --ink-2: #9aa0b0; --ink-3: #6b7183;
+    --accent: #8f8ff0; --accent-soft: rgba(143, 143, 240, .12);
+    --line: #2a2f3b; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--serif); font-size: 16px; line-height: 1.75;
+    text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
+    transition: background .3s var(--ease), color .3s var(--ease);
+  }
+  body.zh .en { display: none; }
+  body.en .zh { display: none; }
+
+  /* ── 顶栏 ── */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 20px;
+    padding: 14px 32px; background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  }
+  .logo { font-weight: 700; font-size: 17px; letter-spacing: -.02em; white-space: nowrap; }
+  .logo em { font-style: normal; color: var(--accent); }
+  nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+  nav a {
+    font-family: var(--sans); font-size: 13px; color: var(--ink-2);
+    text-decoration: none; padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+    transition: color .15s var(--ease), background .15s var(--ease);
+  }
+  nav a:hover { color: var(--ink); background: var(--accent-soft); }
+  .toggles { display: flex; gap: 8px; }
+  .toggles button {
+    font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 8px;
+    padding: 5px 12px; cursor: pointer; transition: all .15s var(--ease);
+  }
+  .toggles button:hover { color: var(--accent); border-color: var(--accent); }
+
+  main { max-width: 860px; margin: 0 auto; padding: 0 28px 96px; }
+  section { margin-top: 88px; }
+  h1 { font-size: 44px; line-height: 1.25; letter-spacing: -.02em; margin: 72px 0 18px; }
+  h2 {
+    font-size: 26px; letter-spacing: -.01em; margin-bottom: 22px;
+    padding-top: 12px; display: flex; align-items: baseline; gap: 12px;
+  }
+  h2 .no {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 8px;
+  }
+  h3 { font-size: 18px; margin: 28px 0 10px; }
+  p { color: var(--ink-2); margin: 10px 0; }
+  p strong, li strong { color: var(--ink); }
+  a.inline { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent); }
+
+  .lead { font-size: 19px; color: var(--ink-2); max-width: 620px; }
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; margin: 26px 0 30px; }
+  .badge {
+    font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px;
+    background: var(--bg-soft);
+  }
+  .badge b { color: var(--accent); font-weight: 600; }
+
+  pre {
+    background: var(--bg-code); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 20px; overflow-x: auto; margin: 14px 0;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--ink);
+  }
+  pre .c { color: var(--ink-3); }
+  pre .k { color: var(--accent); }
+  code {
+    font-family: var(--mono); font-size: .86em; background: var(--bg-code);
+    border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--ink);
+  }
+  pre code { border: none; background: none; padding: 0; }
+
+  /* ── 卡片 ── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+  .card .icon { font-size: 20px; margin-bottom: 10px; }
+  .card h4 { font-size: 15.5px; margin-bottom: 6px; }
+  .card p { font-size: 13.5px; line-height: 1.65; margin: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+  th { font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  td:first-child { white-space: nowrap; }
+  kbd {
+    font-family: var(--mono); font-size: 12px; background: var(--bg-soft);
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px;
+  }
+
+  /* ── 界面示意图 ── */
+  .mock {
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow); margin: 18px 0; font-family: var(--sans);
+  }
+  .mock-bar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+  .mock-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .mock-body { display: grid; grid-template-columns: 150px 1fr 1fr; min-height: 220px; }
+  .mock-side { border-right: 1px solid var(--line); padding: 14px; font-size: 12px; color: var(--ink-3); background: var(--bg-soft); }
+  .mock-side .f { padding: 4px 8px; border-radius: 6px; margin-bottom: 2px; }
+  .mock-side .f.on { background: var(--accent-soft); color: var(--accent); }
+  .mock-pane { padding: 18px 22px; font-size: 13px; color: var(--ink-2); }
+  .mock-pane.right { border-left: 1px solid var(--line); color: var(--ink); }
+  .mock-pane .h { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 8px; font-family: var(--serif); }
+  .mock-pane .dim { opacity: .38; }
+  .mock-pane .caret { display: inline-block; width: 2px; height: 1em; background: var(--accent); vertical-align: text-bottom; animation: breathe 1.2s var(--ease) infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+  .mock-cap { font-size: 12px; color: var(--ink-3); text-align: center; padding: 8px; border-top: 1px solid var(--line); background: var(--bg-soft); font-family: var(--sans); }
+
+  details {
+    border: 1px solid var(--line); border-radius: 10px; margin: 10px 0;
+    background: var(--bg-soft); transition: border-color .15s var(--ease);
+  }
+  details[open] { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+  summary {
+    cursor: pointer; padding: 14px 20px; font-weight: 600; font-size: 15px;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  summary::after { content: "+"; font-family: var(--mono); color: var(--accent); font-size: 17px; }
+  details[open] summary::after { content: "−"; }
+  details .body { padding: 0 20px 16px; }
+  details .body p { margin: 6px 0; font-size: 14.5px; }
+
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  footer {
+    margin-top: 110px; padding-top: 28px; border-top: 1px solid var(--line);
+    font-family: var(--sans); font-size: 13px; color: var(--ink-3);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  @media (max-width: 720px) {
+    h1 { font-size: 32px; }
+    .mock-body { grid-template-columns: 1fr; }
+    .mock-side, .mock-pane.right { display: none; }
+    nav { display: none; }
+  }
+</style>
+</head>
+<body class="zh">
+
+<header>
+  <div class="logo">dddown <em>·</em> <span class="zh">快速开始</span><span class="en">Quick Start</span></div>
+  <nav>
+    <a href="#features"><span class="zh">特性</span><span class="en">Features</span></a>
+    <a href="#install"><span class="zh">安装运行</span><span class="en">Install</span></a>
+    <a href="#tour"><span class="zh">界面导览</span><span class="en">Tour</span></a>
+    <a href="#writing"><span class="zh">写作体验</span><span class="en">Writing</span></a>
+    <a href="#shortcuts"><span class="zh">快捷键</span><span class="en">Shortcuts</span></a>
+    <a href="#config"><span class="zh">配置</span><span class="en">Config</span></a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <div class="toggles">
+    <button id="langBtn" type="button">EN</button>
+    <button id="themeBtn" type="button">☾</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════ Hero ═══════════ -->
+  <div class="zh">
+    <h1>五分钟内，<br>开始安静地写作。</h1>
+    <p class="lead">dddown 是一个本地优先的 Markdown 编辑器：Rust 单二进制、零外网依赖、行内实时渲染。你的笔记就是工作区里的纯 Markdown 文件——没有私有格式，没有锁定。</p>
+  </div>
+  <div class="en">
+    <h1>Start writing,<br>quietly, in five minutes.</h1>
+    <p class="lead">dddown is a local-first Markdown editor: a single Rust binary, zero external network dependencies, live inline rendering. Your notes are plain Markdown files in a workspace — no proprietary format, no lock-in.</p>
+  </div>
+
+  <div class="badges">
+    <span class="badge"><b>~18MB</b> <span class="zh">单二进制</span><span class="en">single binary</span></span>
+    <span class="badge"><b>0</b> <span class="zh">外网请求</span><span class="en">network calls</span></span>
+    <span class="badge"><b>127.0.0.1</b> <span class="zh">仅本机监听</span><span class="en">localhost only</span></span>
+    <span class="badge"><b>.md</b> <span class="zh">纯文本数据</span><span class="en">plain-text data</span></span>
+  </div>
+
+  <div class="zh">
+    <pre><code><span class="c"># 从源码启动（需要 Rust stable + Node.js 18+）</span>
+cd web && npm install && npm run build && cd ..
+cargo run</code></pre>
+    <p>启动后浏览器自动打开；终端打印的 <code>http://127.0.0.1:端口/?token=…</code> 就是入口。不想装 Node？往下看<a class="inline" href="#install">发布二进制</a>。</p>
+  </div>
+  <div class="en">
+    <pre><code><span class="c"># Run from source (requires Rust stable + Node.js 18+)</span>
+cd web && npm install && npm run build && cd ..
+cargo run</code></pre>
+    <p>Your browser opens automatically; the <code>http://127.0.0.1:PORT/?token=…</code> URL printed in the terminal is your entry point. Don't want Node? See the <a class="inline" href="#install">release binary</a> below.</p>
+  </div>
+
+  <!-- ═══════════ 特性 ═══════════ -->
+  <section id="features" class="reveal">
+    <h2><span class="no">01</span><span class="zh">它擅长什么</span><span class="en">What it does well</span></h2>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">✒️</div>
+        <h4><span class="zh">行内渲染</span><span class="en">Inline rendering</span></h4>
+        <p><span class="zh">光标离开该行即就地渲染：KaTeX 公式、图片缩略、链接只显示文字、粗体/斜体真字形；光标落回即恢复源码。Typora 式交互。</span><span class="en">When the caret leaves a line it renders in place: KaTeX math, image thumbnails, text-only links, real bold/italic. The source returns when the caret lands back — Typora-style.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">🪶</div>
+        <h4><span class="zh">沉浸式写作</span><span class="en">Immersive writing</span></h4>
+        <p><span class="zh">打字机滚动让光标始终居中；专注模式高亮当前段落、淡化其余；光标呼吸、源码语法标记淡化至 25%。</span><span class="en">Typewriter scrolling keeps the caret centered; focus mode highlights the current paragraph and fades the rest; breathing caret; syntax marks faded to 25%.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">📖</div>
+        <h4><span class="zh">双栏实时预览</span><span class="en">Live two-pane preview</span></h4>
+        <p><span class="zh">WASM 解析 + 增量 DOM 更新，150ms 防抖；支持 Mermaid 图、代码高亮、数学公式、<code>[[wikilink]]</code> 跳转；预览跟随光标定位。</span><span class="en">WASM parsing + incremental DOM updates, 150ms debounce; Mermaid, code highlighting, math, <code>[[wikilink]]</code> jumps; the preview follows your caret.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">🀄</div>
+        <h4><span class="zh">中文排版打磨</span><span class="en">CJK typography</span></h4>
+        <p><span class="zh">宋体衬线、kerning、悬挂标点、图注与嵌套列表间距逐项校准，书卷气亮色 + 低饱和深蓝灰暗色双主题。</span><span class="en">Serif CJK with kerning, hanging punctuation, captions and nested-list spacing tuned pixel by pixel. Book-like light theme + desaturated dark blue-grey.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h4><span class="zh">片段补全</span><span class="en">Snippet completion</span></h4>
+        <p><span class="zh">76 个内置片段：输入 <code>tbl</code> 按 Tab 展开表格模板，编号字段逐个跳转；支持自定义覆盖。</span><span class="en">76 built-in snippets: type <code>tbl</code> and press Tab to expand a table template with tab-stop fields; fully customizable.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">💾</div>
+        <h4><span class="zh">可靠保存</span><span class="en">Reliable saving</span></h4>
+        <p><span class="zh">500ms 防抖自动保存、原子写盘、外部修改自动同步进来（vim / git pull / iCloud），防回声循环。</span><span class="en">500ms debounced autosave, atomic writes; external changes (vim / git pull / iCloud) sync in automatically without echo loops.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">📤</div>
+        <h4><span class="zh">一键 HTML 导出</span><span class="en">One-key HTML export</span></h4>
+        <p><span class="zh">导出的 HTML 完全自包含：CSS 内联、字体转 base64，发给谁双击就能看，不需要网络。</span><span class="en">Exported HTML is fully self-contained: inlined CSS, base64 fonts. Anyone can double-click to read it, offline.</span></p>
+      </div>
+      <div class="card">
+        <div class="icon">🔍</div>
+        <h4><span class="zh">文件管理</span><span class="en">File management</span></h4>
+        <p><span class="zh">侧栏文件树、全文搜索（<kbd>⌘P</kbd>，匹配文件名与内容）、大纲面板点击跳转并跟随滚动高亮。</span><span class="en">Sidebar file tree, full-text search (<kbd>⌘P</kbd>, matches names and content), outline panel with jump and scroll-follow highlighting.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 安装运行 ═══════════ -->
+  <section id="install" class="reveal">
+    <h2><span class="no">02</span><span class="zh">安装与运行</span><span class="en">Install &amp; Run</span></h2>
+
+    <h3><span class="zh">方式一：发布二进制（推荐给使用者）</span><span class="en">Option A: release binary (recommended for users)</span></h3>
+    <div class="zh">
+      <p>构建一次，之后分发单个文件，运行机器上<strong>不需要 Node</strong>：</p>
+      <pre><code><span class="c"># 在构建机器上执行一次</span>
+cd web && npm run build && cd ..
+cargo build --release
+
+<span class="c"># 产物拷到任何机器直接运行</span>
+./dddown                          <span class="c"># 默认工作区 ~/Documents/Notes</span>
+./dddown --workspace ~/my-notes   <span class="c"># 指定工作区</span></code></pre>
+    </div>
+    <div class="en">
+      <p>Build once, then ship a single file — the target machine <strong>doesn't need Node</strong>:</p>
+      <pre><code><span class="c"># Run once on the build machine</span>
+cd web && npm run build && cd ..
+cargo build --release
+
+<span class="c"># Copy the artifact anywhere and run it</span>
+./dddown                          <span class="c"># default workspace ~/Documents/Notes</span>
+./dddown --workspace ~/my-notes   <span class="c"># pick a workspace</span></code></pre>
+    </div>
+
+    <h3><span class="zh">方式二：从源码运行（三步）</span><span class="en">Option B: run from source (three steps)</span></h3>
+    <table>
+      <thead><tr><th><span class="zh">依赖</span><span class="en">Dependency</span></th><th><span class="zh">版本</span><span class="en">Version</span></th><th><span class="zh">用途</span><span class="en">Purpose</span></th></tr></thead>
+      <tbody>
+        <tr><td>Rust</td><td>stable</td><td><span class="zh">编译服务端</span><span class="en">compile the server</span></td></tr>
+        <tr><td>Node.js</td><td>18+</td><td><span class="zh">构建前端（仅源码运行需要）</span><span class="en">build the frontend (source runs only)</span></td></tr>
+      </tbody>
+    </table>
+    <pre><code>cd web && npm install    <span class="c"># 1. install deps</span>
+npm run build            <span class="c"># 2. build web/dist</span>
+cd .. && cargo run       <span class="c"># 3. start the server</span></code></pre>
+
+    <div class="zh">
+      <p><strong>启动行为</strong>：监听 <code>127.0.0.1</code> 随机端口（不抢 8080）；自动打开默认浏览器；每次启动生成随机 token，访问必须携带；工作区目录不存在时自动创建。</p>
+    </div>
+    <div class="en">
+      <p><strong>Startup behavior</strong>: listens on a random <code>127.0.0.1</code> port (never fights over 8080); opens your default browser; generates a random token per launch that every request must carry; creates the workspace directory if missing.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 界面导览 ═══════════ -->
+  <section id="tour" class="reveal">
+    <h2><span class="no">03</span><span class="zh">界面导览：第一次打开</span><span class="en">Tour: your first open</span></h2>
+    <div class="mock">
+      <div class="mock-bar"><i></i><i></i><i></i></div>
+      <div class="mock-body">
+        <div class="mock-side">
+          <div class="zh"><div class="f on">📄 welcome.md</div><div class="f">📄 读书笔记.md</div><div class="f">📄 todo.md</div></div>
+          <div class="en"><div class="f on">📄 welcome.md</div><div class="f">📄 notes.md</div><div class="f">📄 todo.md</div></div>
+        </div>
+        <div class="mock-pane">
+          <div class="h dim"># My Note</div>
+          <div class="zh">这是 **粗体** 和 $E=mc^2$<span class="caret"></span></div>
+          <div class="en">This is **bold** and $E=mc^2$<span class="caret"></span></div>
+        </div>
+        <div class="mock-pane right">
+          <div class="h">My Note</div>
+          <div class="zh">这是 <b>粗体</b> 和 <i>E=mc²</i></div>
+          <div class="en">This is <b>bold</b> and <i>E=mc²</i></div>
+        </div>
+      </div>
+      <div class="mock-cap"><span class="zh">左：文件树 / 大纲 · 中：编辑器（源码 + 行内渲染）· 右：实时预览</span><span class="en">Left: file tree / outline · Middle: editor (source + inline rendering) · Right: live preview</span></div>
+    </div>
+
+    <div class="zh">
+      <p>进去之后按顺序试一遍，五分钟内摸清全部核心能力：</p>
+      <p><strong>1. 新建文件</strong> — 侧栏顶部输入框输入文件名（如 <code>test.md</code>）回车。</p>
+      <p><strong>2. 自动保存</strong> — 打字后状态栏右下角出现「未保存」，约半秒变「已保存」；到工作区目录确认文件已落盘。</p>
+      <p><strong>3. 行内渲染</strong> — 写一行 <code>这是 **粗体** 和 $x^2$</code>，光标移到下一行：粗体变真字重、公式就地渲染；光标移回来，源码复原。</p>
+      <p><strong>4. 片段补全</strong> — 新起一行输入 <code>tbl</code>，补全弹层出现后按 <kbd>Tab</kbd>，表格模板展开，继续按 Tab 在字段间跳转。</p>
+      <p><strong>5. 全文搜索</strong> — <kbd>⌘P</kbd>（Windows/Linux：<kbd>Ctrl+P</kbd>）弹出，关键词同时匹配文件名与内容。</p>
+    </div>
+    <div class="en">
+      <p>Once you're in, walk through these steps to cover every core capability in five minutes:</p>
+      <p><strong>1. Create a file</strong> — type a name (e.g. <code>test.md</code>) into the input at the top of the sidebar and press Enter.</p>
+      <p><strong>2. Autosave</strong> — after typing, the status bar shows "unsaved", then "saved" within half a second; check the workspace directory to confirm the file landed on disk.</p>
+      <p><strong>3. Inline rendering</strong> — write a line like <code>This is **bold** and $x^2$</code>, then move the caret to the next line: the bold becomes real weight, the math renders in place; move the caret back and the source returns.</p>
+      <p><strong>4. Snippets</strong> — on a new line type <code>tbl</code>, press <kbd>Tab</kbd> when the completion popup appears, and a table template expands; keep pressing Tab to jump between fields.</p>
+      <p><strong>5. Full-text search</strong> — <kbd>⌘P</kbd> (Windows/Linux: <kbd>Ctrl+P</kbd>) opens it; keywords match both file names and content.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 写作体验 ═══════════ -->
+  <section id="writing" class="reveal">
+    <h2><span class="no">04</span><span class="zh">写作体验进阶</span><span class="en">Writing experience, deeper</span></h2>
+    <div class="zh">
+      <h3>专注模式</h3>
+      <p><kbd>⌘⇧D</kbd> 开启：只有当前段落保持正常对比度，其余段落淡化。鼠标悬停可临时恢复查看上下文。长文写作时配合打字机滚动（光标始终停留在视口中央），注意力不散。</p>
+      <h3>预览跟随光标</h3>
+      <p>光标进入新的章节（heading），预览区自动平滑滚动到对应位置——长文档里不用手动对齐两栏。</p>
+      <h3>主题与字体</h3>
+      <p><kbd>⌘⇧T</kbd> 在书卷（亮色宋体）与夜色（低饱和深蓝灰）之间切换；<kbd>⌘⇧F</kbd> 切换宋体/无衬线。等宽字体本地打包，离线也正常渲染。所有选择随刷新记忆。</p>
+      <h3>外部修改同步</h3>
+      <p>用 vim 改了文件、git pull 拉了新内容、iCloud 同步进来——编辑器自动加载最新内容，不会互相覆盖。</p>
+    </div>
+    <div class="en">
+      <h3>Focus mode</h3>
+      <p><kbd>⌘⇧D</kbd> turns it on: only the current paragraph keeps full contrast while the rest fades. Hover temporarily restores context. Combined with typewriter scrolling (the caret stays at the viewport center), your attention never drifts.</p>
+      <h3>Preview follows the caret</h3>
+      <p>When your caret enters a new heading, the preview smooth-scrolls to the matching section — no manual two-pane alignment in long documents.</p>
+      <h3>Themes &amp; fonts</h3>
+      <p><kbd>⌘⇧T</kbd> switches between Book (light serif) and Night (desaturated dark blue-grey); <kbd>⌘⇧F</kbd> toggles serif/sans-serif. Monospace fonts are bundled locally, so rendering works offline. All choices persist across reloads.</p>
+      <h3>External change sync</h3>
+      <p>Edit a file with vim, pull with git, or let iCloud sync it in — the editor loads the latest content automatically, and nothing overwrites anything else.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 快捷键 ═══════════ -->
+  <section id="shortcuts" class="reveal">
+    <h2><span class="no">05</span><span class="zh">快捷键</span><span class="en">Shortcuts</span></h2>
+    <table>
+      <thead><tr><th><span class="zh">动作</span><span class="en">Action</span></th><th>macOS</th><th>Windows / Linux</th></tr></thead>
+      <tbody>
+        <tr><td><span class="zh">保存</span><span class="en">Save</span></td><td><kbd>⌘S</kbd></td><td><kbd>Ctrl+S</kbd></td></tr>
+        <tr><td><span class="zh">全文搜索</span><span class="en">Full-text search</span></td><td><kbd>⌘P</kbd></td><td><kbd>Ctrl+P</kbd></td></tr>
+        <tr><td><span class="zh">导出 HTML</span><span class="en">Export HTML</span></td><td><kbd>⌘⇧X</kbd></td><td><kbd>Ctrl+Shift+X</kbd></td></tr>
+        <tr><td><span class="zh">专注模式</span><span class="en">Focus mode</span></td><td><kbd>⌘⇧D</kbd></td><td><kbd>Ctrl+Shift+D</kbd></td></tr>
+        <tr><td><span class="zh">切换主题</span><span class="en">Toggle theme</span></td><td><kbd>⌘⇧T</kbd></td><td><kbd>Ctrl+Shift+T</kbd></td></tr>
+        <tr><td><span class="zh">切换字体</span><span class="en">Toggle font</span></td><td><kbd>⌘⇧F</kbd></td><td><kbd>Ctrl+Shift+F</kbd></td></tr>
+        <tr><td><span class="zh">收起/展开侧栏</span><span class="en">Collapse sidebar</span></td><td><kbd>⌘⇧E</kbd></td><td><kbd>Ctrl+Shift+E</kbd></td></tr>
+      </tbody>
+    </table>
+    <div class="zh">
+      <p>全部可在 <code>~/.dddown/config.toml</code> 的 <code>[shortcuts]</code> 段覆盖，格式 <code>mod-shift-x</code>（<code>mod</code> 在 macOS 上是 Cmd，其他平台是 Ctrl）。非法写法静默回退默认键位。</p>
+    </div>
+    <div class="en">
+      <p>All of them can be overridden in the <code>[shortcuts]</code> section of <code>~/.dddown/config.toml</code>, using the <code>mod-shift-x</code> format (<code>mod</code> means Cmd on macOS, Ctrl elsewhere). Invalid entries silently fall back to defaults.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 配置 ═══════════ -->
+  <section id="config" class="reveal">
+    <h2><span class="no">06</span><span class="zh">配置与数据</span><span class="en">Configuration &amp; data</span></h2>
+    <div class="zh">
+      <p>配置文件：<code>~/.dddown/config.toml</code>。所有字段可省略，缺省用默认值；文件不存在或内容非法时整体回退默认，服务照常启动。</p>
+    </div>
+    <div class="en">
+      <p>Configuration lives at <code>~/.dddown/config.toml</code>. Every field is optional and defaults apply; a missing or invalid file falls back to defaults entirely, and the server still starts.</p>
+    </div>
+    <pre><code>[server]
+port = 0                          <span class="c"># 0 = random port (default)</span>
+workspace = "~/Documents/Notes"   <span class="c"># ~ expansion supported</span>
+token = "your-secret-token"       <span class="c"># omit = random token per launch</span>
+
+[editor]
+font_size = 15
+tab_size = 2
+
+[shortcuts]
+save = "mod-s"
+search = "mod-p"                  <span class="c"># all 7 actions optional</span></code></pre>
+
+    <h3><span class="zh">数据都在哪</span><span class="en">Where your data lives</span></h3>
+    <table>
+      <thead><tr><th><span class="zh">内容</span><span class="en">Content</span></th><th><span class="zh">位置</span><span class="en">Location</span></th></tr></thead>
+      <tbody>
+        <tr><td><span class="zh">你的文档</span><span class="en">Your documents</span></td><td><span class="zh">工作区目录（默认 <code>~/Documents/Notes</code>）</span><span class="en">the workspace directory (default <code>~/Documents/Notes</code>)</span></td></tr>
+        <tr><td><span class="zh">配置</span><span class="en">Configuration</span></td><td><code>~/.dddown/config.toml</code></td></tr>
+        <tr><td><span class="zh">自定义片段</span><span class="en">Custom snippets</span></td><td><code>~/.dddown/snippets/*.json</code></td></tr>
+        <tr><td><span class="zh">上次打开的文件、主题选择</span><span class="en">Last file, theme choice</span></td><td><span class="zh">浏览器 localStorage</span><span class="en">browser localStorage</span></td></tr>
+      </tbody>
+    </table>
+    <div class="zh">
+      <p><strong>迁移</strong>：工作区就是普通目录，<code>cp -r</code> 或打包带走即可。<strong>卸载</strong>：删掉工作区目录 + <code>~/.dddown/</code>，干干净净。</p>
+    </div>
+    <div class="en">
+      <p><strong>Migrating</strong>: the workspace is a plain directory — just <code>cp -r</code> or archive it. <strong>Uninstalling</strong>: delete the workspace directory + <code>~/.dddown/</code>, and nothing is left behind.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ FAQ ═══════════ -->
+  <section id="faq" class="reveal">
+    <h2><span class="no">07</span><span class="zh">常见问题</span><span class="en">FAQ</span></h2>
+
+    <details>
+      <summary><span class="zh">启动报错 failed to bind port？</span><span class="en">Startup fails with "failed to bind port"?</span></summary>
+      <div class="body">
+        <p class="zh">端口被占用。默认随机端口不会遇到；如果你在 config.toml 里配了固定端口，换一个或删掉该行。</p>
+        <p class="en">The port is taken. The default random port never hits this; if you pinned a fixed port in config.toml, pick another one or remove the line.</p>
+      </div>
+    </details>
+    <details>
+      <summary><span class="zh">浏览器没有自动打开？</span><span class="en">The browser didn't open automatically?</span></summary>
+      <div class="body">
+        <p class="zh">从终端输出里复制 <code>http://127.0.0.1:端口/?token=…</code> 完整 URL 手动打开即可。</p>
+        <p class="en">Copy the full <code>http://127.0.0.1:PORT/?token=…</code> URL from the terminal output and open it manually.</p>
+      </div>
+    </details>
+    <details>
+      <summary><span class="zh">页面提示 404 或无法访问？</span><span class="en">The page shows 404 or can't be reached?</span></summary>
+      <div class="body">
+        <p class="zh">URL 必须带完整 token，且 token 每次启动都会变化。从当前终端输出重新复制 URL。</p>
+        <p class="en">The URL must carry the full token, and the token changes on every launch. Re-copy the URL from the current terminal output.</p>
+      </div>
+    </details>
+    <details>
+      <summary><span class="zh">cargo run 首次启动很慢？</span><span class="en">First cargo run is slow?</span></summary>
+      <div class="body">
+        <p class="zh">首次编译要拉取并构建全部依赖，几分钟正常；之后增量编译只要几秒。</p>
+        <p class="en">The first compile fetches and builds every dependency — a few minutes is normal. Incremental rebuilds take seconds afterwards.</p>
+      </div>
+    </details>
+    <details>
+      <summary><span class="zh">改了 web/src 代码没生效？</span><span class="en">Changes under web/src have no effect?</span></summary>
+      <div class="body">
+        <p class="zh">debug 模式读的是 web/dist 构建产物，不是源码。重新 <code>npm run build</code>，或用开发模式（<code>MD_PORT=41937 cargo run</code> + <code>npm run dev</code> 享受 HMR）。</p>
+        <p class="en">Debug mode serves the built web/dist artifacts, not the source. Run <code>npm run build</code> again, or use dev mode (<code>MD_PORT=41937 cargo run</code> + <code>npm run dev</code> for HMR).</p>
+      </div>
+    </details>
+    <details>
+      <summary><span class="zh">保存会覆盖我在别处做的修改吗？</span><span class="en">Will saving overwrite changes I made elsewhere?</span></summary>
+      <div class="body">
+        <p class="zh">不会。编辑器只在你输入过内容之后才自动保存；外部修改进来后不会触发保存路径（防回声循环），git pull、iCloud 同步进来的内容不会被空写覆盖。</p>
+        <p class="en">No. The editor only autosaves after you've actually typed; incoming external changes never trigger the save path (echo-loop protection), so git pulls and iCloud syncs are never clobbered.</p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <span class="zh">dddown · 本地优先 · 纯 Markdown · 单二进制分发 · 更多细节见 docs/USAGE.md 与 docs/ARCHITECTURE.md</span>
+    <span class="en">dddown · local-first · plain Markdown · single-binary distribution · see docs/USAGE.md and docs/ARCHITECTURE.md for more</span>
+    <span>© 3Down</span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var body = document.body;
+  var langBtn = document.getElementById('langBtn');
+  var themeBtn = document.getElementById('themeBtn');
+
+  function applyLang(lang) {
+    body.classList.toggle('zh', lang !== 'en');
+    body.classList.toggle('en', lang === 'en');
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    langBtn.textContent = lang === 'en' ? '中文' : 'EN';
+    try { localStorage.setItem('qs-lang', lang); } catch (e) {}
+  }
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    themeBtn.textContent = dark ? '☀' : '☾';
+    try { localStorage.setItem('qs-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+
+  var savedLang = 'zh', savedTheme = 'light';
+  try {
+    savedLang = localStorage.getItem('qs-lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+    savedTheme = localStorage.getItem('qs-theme') || 'light';
+  } catch (e) {}
+  applyLang(savedLang);
+  applyTheme(savedTheme === 'dark');
+
+  langBtn.addEventListener('click', function () {
+    applyLang(body.classList.contains('zh') ? 'en' : 'zh');
+  });
+  themeBtn.addEventListener('click', function () {
+    applyTheme(!document.documentElement.classList.contains('dark'));
+  });
+
+  // 滚动渐显
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+  }
+})();
+</script>
+</body>
+</html>
