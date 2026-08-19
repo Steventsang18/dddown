@@ -62,11 +62,13 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export async function exportCurrentFile(path: string, previewEl: HTMLElement): Promise<string> {
+/** 构建自包含 HTML（PDF 导出与 HTML 导出共用） */
+export async function buildExportHtml(previewEl: HTMLElement): Promise<string> {
+  const path = previewEl.dataset.path || 'export';
   const css = await inlineFonts(`${previewCss}\n${katexCss}\n${collectDynamicStyles()}`);
   const tokens = collectTokens();
   const title = path.replace(/\.md$/, '');
-  const html = [
+  return [
     '<!DOCTYPE html>',
     '<html lang="zh-CN">',
     '<head>',
@@ -83,6 +85,30 @@ export async function exportCurrentFile(path: string, previewEl: HTMLElement): P
     '</body>',
     '</html>',
   ].join('\n');
+}
 
+export async function exportCurrentFile(path: string, previewEl: HTMLElement): Promise<string> {
+  previewEl.dataset.path = path;
+  const html = await buildExportHtml(previewEl);
   return exportHtml(path, html);
+}
+
+/** PDF 导出：构建 HTML → 服务端 ironpress 渲染 → 下载 */
+export async function exportPdf(path: string, previewEl: HTMLElement): Promise<void> {
+  previewEl.dataset.path = path;
+  const html = await buildExportHtml(previewEl);
+  const token = new URLSearchParams(window.location.search).get('token') || '';
+  const res = await fetch(`/api/export/pdf?token=${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, html }),
+  });
+  if (!res.ok) throw new Error(`PDF export failed: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = path.replace(/\.md$/, '.pdf');
+  a.click();
+  URL.revokeObjectURL(url);
 }

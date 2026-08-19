@@ -9,6 +9,7 @@ mod ws;
 
 use rand::Rng;
 use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
 use tokio::net::TcpListener;
 
 use config::Config;
@@ -96,12 +97,20 @@ async fn main() {
         .map_err(|e| tracing::error!("file watcher start failed: {e}"))
         .ok();
 
+    let watcher = Arc::new(RwLock::new(
+        _watcher.expect("file watcher failed to start")
+    ));
+
+    let mut editor = cfg.editor.clone();
+    editor.workspace = workspace.to_string_lossy().into_owned();
+
     let state = AppState {
-        workspace: workspace.clone(),
+        workspace: Arc::new(RwLock::new(workspace.clone())),
         token: std::sync::Arc::new(std::sync::RwLock::new(token.clone())),
         notify_tx,
         shortcuts: config_shortcuts(&cfg),
-        editor: cfg.editor.clone(),
+        editor,
+        watcher,
     };
 
     let app = routes::build_router(state, "web/dist");

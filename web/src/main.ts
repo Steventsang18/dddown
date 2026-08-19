@@ -5,13 +5,13 @@ import '@fontsource/jetbrains-mono/500.css';
 import { setFocusMode, isFocusMode } from './editor/focus';
 import { mergeUserSnippets } from './editor/snippets';
 import { initParser, renderPreview, renderNow, onRenderDone, setWikilinkCallbacks } from './preview/render';
-import { readFile, writeFile, fetchSnippets, fetchShortcuts, fetchConfig, setToken } from './api/client';
+import { readFile, writeFile, fetchSnippets, fetchShortcuts, fetchConfig, setToken, setWorkspace, browseFolder } from './api/client';
 import { SocketClient } from './api/socket';
 import { initTheme, cycleTheme, toggleFont, themeLabel } from './theme';
 import { Sidebar } from './sidebar';
 import { SearchPanel } from './search';
 import { TocPanel } from './toc';
-import { exportCurrentFile } from './export';
+import { exportCurrentFile, exportPdf } from './export';
 import { setupScrollSync } from './sync';
 import { buildShortcutMap } from './shortcuts';
 import { EditorView } from '@codemirror/view';
@@ -28,7 +28,9 @@ const themeBtnEl = document.getElementById('themeBtn')!;
 const fontBtnEl = document.getElementById('fontBtn')!;
 const focusBtnEl = document.getElementById('focusBtn')!;
 const settingsBtnEl = document.getElementById('settingsBtn')!;
-const settingsDropdownEl = document.getElementById('settingsDropdown')!;
+const settingsPanelEl = document.getElementById('settingsPanel')!;
+const exportToggleEl = document.getElementById('exportToggle')!;
+const exportSubMenuEl = document.getElementById('exportSubMenu')!;
 const formatToolbarEl = document.getElementById('formatToolbar')!;
 const formatDetectStripEl = document.getElementById('formatDetectStrip')!;
 const collapseBtnEl = document.getElementById('collapseBtn')!;
@@ -49,6 +51,10 @@ const tokenModalEl = document.getElementById('tokenModal')!;
 const syntaxModalEl = document.getElementById('syntaxModal')!;
 const tokenInputEl = document.getElementById('tokenInput') as HTMLInputElement;
 const tokenHintEl = document.getElementById('tokenHint')!;
+const workspaceModalEl = document.getElementById('workspaceModal')!;
+const wsCurrentPathEl = document.getElementById('wsCurrentPath')!;
+const workspaceInputEl = document.getElementById('workspaceInput') as HTMLInputElement;
+const workspaceHintEl = document.getElementById('workspaceHint')!;
 
 const TOKEN_HINT_DEFAULT = '要求：8-64 位，仅限字母、数字、连字符（-）和下划线（_）';
 const TOKEN_RE = /^[a-zA-Z0-9_-]{8,64}$/;
@@ -71,6 +77,7 @@ let sidebar: Sidebar;
 let searchPanel: SearchPanel;
 let tocPanel: TocPanel;
 let loadingFile = false;
+let workspacePath = '';
 
 // ========== Init ==========
 async function init() {
@@ -85,6 +92,11 @@ async function init() {
   mergeUserSnippets(await fetchSnippets());
   const shortcuts = buildShortcutMap(await fetchShortcuts());
   const editorConfig = await fetchConfig();
+  workspacePath = editorConfig.workspace || '';
+  if (workspacePath) {
+    const display = workspacePath.length > 24 ? '…' + workspacePath.slice(-22) : workspacePath;
+    document.getElementById('workspacePath')!.textContent = display;
+  }
 
   // Create editor
   editorView = createEditor(
@@ -204,23 +216,45 @@ async function init() {
   sidebarCollapseEl.addEventListener('click', toggleSidebar);
   focusBtnEl.addEventListener('click', toggleFocusMode);
 
-  // 设置下拉菜单
+  // 设置面板
   settingsBtnEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    settingsDropdownEl.classList.toggle('show');
+    settingsPanelEl.classList.toggle('show');
   });
   document.addEventListener('click', (e) => {
-    if (!settingsDropdownEl.contains(e.target as Node) && e.target !== settingsBtnEl) {
-      settingsDropdownEl.classList.remove('show');
+    if (!settingsPanelEl.contains(e.target as Node) && e.target !== settingsBtnEl) {
+      settingsPanelEl.classList.remove('show');
     }
   });
+  // 导出子菜单展开
+  exportToggleEl.addEventListener('click', () => {
+    exportToggleEl.classList.toggle('expanded');
+    exportSubMenuEl.classList.toggle('show');
+  });
+  // 凭证
   document.getElementById('menuCredentials')!.addEventListener('click', () => {
-    settingsDropdownEl.classList.remove('show');
+    settingsPanelEl.classList.remove('show');
     openTokenModal();
   });
-  document.getElementById('menuExport')!.addEventListener('click', () => {
-    settingsDropdownEl.classList.remove('show');
+  // 导出 HTML
+  document.getElementById('menuExportHTML')!.addEventListener('click', () => {
+    settingsPanelEl.classList.remove('show');
     doExport();
+  });
+  // 导出 PDF
+  document.getElementById('menuExportPDF')!.addEventListener('click', () => {
+    settingsPanelEl.classList.remove('show');
+    doExportPdf();
+  });
+  // 导入 Markdown
+  document.getElementById('menuImport')!.addEventListener('click', () => {
+    settingsPanelEl.classList.remove('show');
+    triggerImport();
+  });
+  // 工作空间路径
+  document.getElementById('workspacePathBtn')!.addEventListener('click', () => {
+    settingsPanelEl.classList.remove('show');
+    openWorkspaceModal();
   });
 
   // 左侧格式工具栏
@@ -311,6 +345,17 @@ async function init() {
   // 语法速查弹窗
   document.getElementById('syntaxCloseBtn')!.addEventListener('click', () => { syntaxModalEl.hidden = true; });
   syntaxModalEl.addEventListener('click', (e) => { if (e.target === syntaxModalEl) syntaxModalEl.hidden = true; });
+
+  // 工作空间弹窗
+  document.getElementById('workspaceCancelBtn')!.addEventListener('click', () => { workspaceModalEl.hidden = true; });
+  document.getElementById('workspaceSaveBtn')!.addEventListener('click', saveWorkspaceSetting);
+  document.getElementById('workspaceBrowseBtn')!.addEventListener('click', doBrowseFolder);
+  workspaceModalEl.addEventListener('click', (e) => { if (e.target === workspaceModalEl) workspaceModalEl.hidden = true; });
+  workspaceInputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveWorkspaceSetting();
+    if (e.key === 'Escape') workspaceModalEl.hidden = true;
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !syntaxModalEl.hidden) syntaxModalEl.hidden = true;
   });
@@ -609,7 +654,6 @@ function jumpEditorToHeading(text: string) {
 async function doExport() {
   if (!editorView || !currentFile) return;
   try {
-    // 确保预览包含编辑器最新内容再克隆
     await renderNow(editorView.state.doc.toString(), previewEl);
     const name = await exportCurrentFile(currentFile, previewEl);
     showStatus(`已导出 ${name}`);
@@ -617,6 +661,40 @@ async function doExport() {
     console.error('[export] failed:', err);
     showStatus('导出失败');
   }
+}
+
+async function doExportPdf() {
+  if (!editorView || !currentFile) return;
+  try {
+    await renderNow(editorView.state.doc.toString(), previewEl);
+    await exportPdf(currentFile, previewEl);
+    showStatus('已导出 PDF');
+  } catch (err) {
+    console.error('[export-pdf] failed:', err);
+    showStatus('PDF 导出失败');
+  }
+}
+
+function triggerImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.md';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const content = await file.text();
+      const name = file.name.endsWith('.md') ? file.name : file.name + '.md';
+      await writeFile(name, content, '');
+      sidebar.refresh();
+      await loadFile(name);
+      showStatus(`已导入 ${name}`);
+    } catch (err) {
+      console.error('[import] failed:', err);
+      showStatus('导入失败');
+    }
+  };
+  input.click();
 }
 
 // ========== Focus Mode ==========
@@ -659,6 +737,57 @@ async function saveTokenSetting() {
     showStatus('密码已设置，地址已更新');
   } catch (err) {
     tokenHintEl.textContent = `⚠ ${err instanceof Error ? err.message : '设置失败'}`;
+  }
+}
+
+function openWorkspaceModal() {
+  wsCurrentPathEl.textContent = workspacePath || '未配置';
+  workspaceInputEl.value = '';
+  workspaceHintEl.textContent = '支持绝对路径或 ~ 开头的主目录路径';
+  workspaceModalEl.hidden = false;
+  workspaceInputEl.focus();
+}
+
+async function saveWorkspaceSetting() {
+  const ws = workspaceInputEl.value.trim();
+  if (!ws) {
+    workspaceHintEl.textContent = '⚠ 请输入路径';
+    return;
+  }
+  try {
+    const newPath = await setWorkspace(ws);
+    workspacePath = newPath;
+    const display = newPath.length > 24 ? '…' + newPath.slice(-22) : newPath;
+    document.getElementById('workspacePath')!.textContent = display;
+    workspaceModalEl.hidden = true;
+    sidebar.refresh();
+    // 当前文件在新工作空间可能不存在，尝试重新加载
+    try {
+      await loadFile(currentFile);
+    } catch {
+      if (editorView) {
+        editorView.dispatch({ changes: { from: 0, to: editorView.state.doc.length, insert: '' } });
+      }
+      renderPreview('', previewEl);
+      fileNameEl.textContent = 'untitled.md';
+      currentFile = '';
+    }
+    showStatus('工作空间已切换');
+  } catch (err) {
+    workspaceHintEl.textContent = `⚠ ${err instanceof Error ? err.message : '切换失败'}`;
+  }
+}
+
+/** 调用系统原生文件夹选择器，选中后填充到输入框 */
+async function doBrowseFolder() {
+  try {
+    const path = await browseFolder();
+    if (path) {
+      workspaceInputEl.value = path;
+      workspaceHintEl.textContent = '已选择: ' + path;
+    }
+  } catch (err) {
+    workspaceHintEl.textContent = `⚠ ${err instanceof Error ? err.message : '浏览失败'}`;
   }
 }
 

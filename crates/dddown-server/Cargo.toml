@@ -23,3 +23,4 @@ dddown-core = { path = "../dddown-core" }
 # release 单二进制嵌入（debug 走 ServeDir）
 rust-embed = "8"
 mime_guess = "2"
+ironpress = "1"

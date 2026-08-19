@@ -31,6 +31,7 @@ export interface SearchResult {
 export interface EditorConfig {
   font_size: number;
   tab_size: number;
+  workspace?: string;
 }
 
 async function getToken(): Promise<string> {
@@ -118,6 +119,25 @@ export async function setToken(token: string): Promise<void> {
     body: JSON.stringify({ token }),
   });
   if (!res.ok) throw new Error((await res.text()) || `设置失败: ${res.status}`);
+}
+
+export async function setWorkspace(workspace: string): Promise<string> {
+  const token = await getToken();
+  const res = await fetch(`/api/settings/workspace?token=${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ workspace }),
+  });
+  if (!res.ok) throw new Error((await res.text()) || `切换失败: ${res.status}`);
+  return res.json();
+}
+
+/** 打开系统原生文件夹选择器，返回选中路径或 null（用户取消） */
+export async function browseFolder(): Promise<string | null> {
+  const token = await getToken();
+  const res = await fetch(`/api/settings/browse-folder?token=${token}`);
+  if (!res.ok) throw new Error(`浏览失败: ${res.status}`);
+  return res.json();
 }
 
 export async function exportHtml(path: string, html: string): Promise<string> {

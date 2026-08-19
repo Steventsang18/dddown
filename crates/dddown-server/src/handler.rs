@@ -5,6 +5,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use dddown_core::sanitize::validate_path;
 
+use crate::config;
+
 #[derive(Deserialize)]
 pub struct PathQuery {
     pub path: String,
@@ -23,6 +25,11 @@ pub struct WriteRequest {
 pub struct ExportRequest {
     pub path: String,
     pub html: String,
+}
+
+#[derive(Deserialize)]
+pub struct WorkspaceRequest {
+    pub workspace: String,
 }
 
 #[derive(Deserialize)]
@@ -205,6 +212,68 @@ pub async fn export_html(base: &Path, req: &ExportRequest) -> Result<String, Sta
         .and_then(|s| s.to_str())
         .unwrap_or("export.html")
         .to_string())
+}
+
+/// HTML → PDF：ironpress 纯 Rust 渲染，返回 PDF 字节
+pub async fn export_pdf(req: &ExportRequest) -> Result<Vec<u8>, StatusCode> {
+    let html = req.html.clone();
+    tokio::task::spawn_blocking(move || {
+        ironpress::html_to_pdf(&html)
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+    })
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+}
+
+/// 切换工作空间：校验路径 → 写入 config → 返回规范化路径
+pub async fn set_workspace(new_ws: &str) -> Result<String, (StatusCode, String)> {
+    let path = if new_ws.starts_with('~') {
+        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+        std::path::PathBuf::from(new_ws.replacen('~', &home, 1))
+    } else {
+        std::path::PathBuf::from(new_ws)
+    };
+
+    if !path.exists() {
+        return Err((StatusCode::BAD_REQUEST, "路径不存在".into()));
+    }
+    if !path.is_dir() {
+        return Err((StatusCode::BAD_REQUEST, "路径不是目录".into()));
+    }
+
+    let canonical = path.canonicalize()
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("无法访问: {e}")))?;
+    let ws_str = canonical.to_string_lossy().into_owned();
+
+    config::save_workspace(&ws_str)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    Ok(ws_str)
+}
+
+/// 打开系统原生文件夹选择对话框（macOS 使用 osascript），返回用户选择的路径（取消返回 None）
+pub async fn browse_folder() -> Result<Option<String>, StatusCode> {
+    tokio::task::spawn_blocking(|| {
+        // macOS: 使用 AppleScript 调用 Finder 选择文件夹对话框
+        let output = std::process::Command::new("osascript")
+            .arg("-e")
+            .arg(r#"tell application "Finder" to activate"#)
+            .arg("-e")
+            .arg(r#"set folderPath to POSIX path of (choose folder with prompt "选择工作空间目录")"#)
+            .arg("-e")
+            .arg(r#"return folderPath"#)
+            .output();
+
+        match output {
+            Ok(out) if out.status.success() => {
+                let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                if path.is_empty() { None } else { Some(path) }
+            }
+            _ => None, // 用户取消或执行失败
+        }
+    })
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 /// 递归构建工作区文件树（仅 .md 文件与目录，跳过隐藏项）

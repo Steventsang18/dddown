@@ -1,6 +1,6 @@
 use axum::{
     extract::{Query, Request, State, WebSocketUpgrade},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     middleware::{self, Next},
     response::Json,
     routing::{delete, get, post},
@@ -12,20 +12,23 @@ use std::sync::{Arc, RwLock};
 use tower_http::services::ServeDir;
 
 use crate::config;
-use crate::handler::{self, ExportRequest, FileEntry, PathQuery, TokenRequest, TreeNode, WriteRequest, WriteResponse};
+use crate::handler::{self, ExportRequest, FileEntry, PathQuery, TokenRequest, TreeNode, WorkspaceRequest, WriteRequest, WriteResponse};
 use crate::search;
 use crate::snippets;
+use crate::watcher::FileWatcher;
 use crate::ws;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub workspace: PathBuf,
+    pub workspace: Arc<RwLock<PathBuf>>,
     /// 访问密码：界面设置后热更新，无需重启
     pub token: Arc<RwLock<String>>,
     pub notify_tx: ws::NotifySender,
     /// 用户自定义快捷键覆盖（动作 → 键序列），空表示使用前端默认
     pub shortcuts: std::collections::HashMap<String, String>,
     pub editor: config::EditorConfig,
+    /// 文件监听器：切换工作空间时重建
+    pub watcher: Arc<RwLock<FileWatcher>>,
 }
 
 #[derive(Deserialize)]
@@ -57,7 +60,10 @@ pub fn build_router(state: AppState, _static_dir: &str) -> Router {
         .route("/shortcuts", get(api_shortcuts))
         .route("/config", get(api_config))
         .route("/settings/token", post(api_set_token))
+        .route("/settings/workspace", post(api_set_workspace))
+        .route("/settings/browse-folder", get(api_browse_folder))
         .route("/export/html", post(api_export_html))
+        .route("/export/pdf", post(api_export_pdf))
         .layer(middleware::from_fn_with_state(Arc::new(state.clone()), auth_middleware));
 
     let base = Router::new()
@@ -79,14 +85,16 @@ async fn api_read_file(
     State(state): State<Arc<AppState>>,
     Query(q): Query<PathQuery>,
 ) -> Result<String, StatusCode> {
-    handler::read_file(&state.workspace, &q.path).await
+    let ws = state.workspace.read().unwrap().clone();
+    handler::read_file(&ws, &q.path).await
 }
 
 async fn api_write_file(
     State(state): State<Arc<AppState>>,
     Json(req): Json<WriteRequest>,
 ) -> Result<Json<WriteResponse>, StatusCode> {
-    handler::write_file(&state.workspace, &req)
+    let ws = state.workspace.read().unwrap().clone();
+    handler::write_file(&ws, &req)
         .await
         .map(Json)
 }
@@ -95,7 +103,8 @@ async fn api_delete_file(
     State(state): State<Arc<AppState>>,
     Query(q): Query<PathQuery>,
 ) -> Result<StatusCode, StatusCode> {
-    handler::delete_file(&state.workspace, &q.path).await?;
+    let ws = state.workspace.read().unwrap().clone();
+    handler::delete_file(&ws, &q.path).await?;
     Ok(StatusCode::OK)
 }
 
@@ -103,7 +112,8 @@ async fn api_list_files(
     State(state): State<Arc<AppState>>,
     Query(q): Query<PathQuery>,
 ) -> Result<Json<Vec<FileEntry>>, StatusCode> {
-    handler::list_files(&state.workspace, &q.path)
+    let ws = state.workspace.read().unwrap().clone();
+    handler::list_files(&ws, &q.path)
         .await
         .map(Json)
 }
@@ -111,14 +121,15 @@ async fn api_list_files(
 async fn api_file_tree(
     State(state): State<Arc<AppState>>,
 ) -> Json<Vec<TreeNode>> {
-    Json(handler::build_tree(&state.workspace))
+    let ws = state.workspace.read().unwrap().clone();
+    Json(handler::build_tree(&ws))
 }
 
 async fn api_search(
     State(state): State<Arc<AppState>>,
     Query(q): Query<search::SearchQuery>,
 ) -> Json<Vec<search::SearchResult>> {
-    let workspace = state.workspace.clone();
+    let workspace = state.workspace.read().unwrap().clone();
     let keyword = q.q;
     let results = tokio::task::spawn_blocking(move || search::search_files(&workspace, &keyword))
         .await
@@ -156,11 +167,47 @@ async fn api_set_token(
     Ok(StatusCode::OK)
 }
 
+async fn api_set_workspace(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<WorkspaceRequest>,
+) -> Result<Json<String>, (StatusCode, String)> {
+    let new_ws = handler::set_workspace(&req.workspace).await?;
+    *state.workspace.write().unwrap() = PathBuf::from(&new_ws);
+    if let Ok(mut w) = state.watcher.write() {
+        if let Ok(new_watcher) = FileWatcher::start(std::path::Path::new(&new_ws), state.notify_tx.clone()) {
+            *w = new_watcher;
+        }
+    }
+    Ok(Json(new_ws))
+}
+
+/// 打开系统原生文件夹选择器
+async fn api_browse_folder() -> Result<Json<Option<String>>, StatusCode> {
+    let path = handler::browse_folder().await?;
+    Ok(Json(path))
+}
+
 async fn api_export_html(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ExportRequest>,
 ) -> Result<String, StatusCode> {
-    handler::export_html(&state.workspace, &req).await
+    let ws = state.workspace.read().unwrap().clone();
+    handler::export_html(&ws, &req).await
+}
+
+async fn api_export_pdf(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<ExportRequest>,
+) -> Result<(StatusCode, HeaderMap, Vec<u8>), StatusCode> {
+    let pdf = handler::export_pdf(&req).await?;
+    let filename = req.path.replace(".md", ".pdf");
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "application/pdf".parse().unwrap());
+    headers.insert(
+        "Content-Disposition",
+        format!("attachment; filename=\"{}\"", filename).parse().unwrap(),
+    );
+    Ok((StatusCode::OK, headers, pdf))
 }
 
 async fn ws_upgrade(
@@ -172,6 +219,6 @@ async fn ws_upgrade(
         return Err(StatusCode::UNAUTHORIZED);
     }
     let rx = state.notify_tx.subscribe();
-    let workspace = state.workspace.clone();
+    let workspace = state.workspace.read().unwrap().clone();
     Ok(ws.on_upgrade(move |socket| ws::handle_socket(socket, workspace, rx)))
 }

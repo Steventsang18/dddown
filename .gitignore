@@ -8,3 +8,7 @@ test-results
 *.swp
 *.swo
 *~
+
+# 本地文档 & 构建产物
+PROJECT_REVIEW_*.md
+dddown-v*-macos-arm64

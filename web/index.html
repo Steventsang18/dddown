@@ -82,15 +82,47 @@
     <span class="btn" id="fontBtn" title="切换字体">宋体</span>
     <span class="btn" id="focusBtn" title="专注模式 ⌘⇧D">专注</span>
     <span class="btn" id="settingsBtn" title="设置">设置</span>
-    <div class="settings-dropdown" id="settingsDropdown">
-      <div class="dropdown-item" id="menuCredentials">
-        <span class="dropdown-icon">🔐</span>
-        <span>凭证</span>
+    <div class="settings-panel" id="settingsPanel">
+      <div class="sp-group">
+        <div class="sp-label">文件</div>
+        <div class="sp-item" id="menuImport">
+          <div class="sp-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V3M4.5 6.5 8 3l3.5 3.5"/><path d="M2.5 14h11"/></svg></div>
+          <div class="sp-text"><span class="sp-title">导入 Markdown</span><span class="sp-desc">从本地选择 .md 文件</span></div>
+          <span class="sp-arrow">›</span>
+        </div>
+        <div class="sp-item sp-toggle" id="exportToggle">
+          <div class="sp-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4.5 8.5 8 12l3.5-3.5"/><path d="M2.5 14h11"/></svg></div>
+          <div class="sp-text"><span class="sp-title">导出</span><span class="sp-desc">HTML 或 PDF</span></div>
+          <div class="sp-expand">▸</div>
+        </div>
+        <div class="sp-sub" id="exportSubMenu">
+          <div class="sp-sub-item" id="menuExportHTML">
+            <span class="sp-sub-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l4 4v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M9 2v4h4"/></svg></span>
+            <span class="sp-sub-label">HTML</span>
+            <span class="sp-sub-hint">自包含</span>
+          </div>
+          <div class="sp-sub-item" id="menuExportPDF">
+            <span class="sp-sub-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 9h6M5 12h3"/></svg></span>
+            <span class="sp-sub-label">PDF</span>
+            <span class="sp-sub-hint">打印分享</span>
+          </div>
+        </div>
       </div>
-      <div class="dropdown-divider"></div>
-      <div class="dropdown-item" id="menuExport">
-        <span class="dropdown-icon">📄</span>
-        <span>导出 HTML</span>
+      <div class="sp-group">
+        <div class="sp-label">工作空间</div>
+        <div class="sp-path">
+          <span class="sp-path-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5h4l1.5 1.5H14v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5Z"/></svg></span>
+          <span class="sp-path-text" id="workspacePath">~/Documents</span>
+          <span class="sp-path-btn" id="workspacePathBtn">更改</span>
+        </div>
+      </div>
+      <div class="sp-group">
+        <div class="sp-label">安全</div>
+        <div class="sp-item" id="menuCredentials">
+          <div class="sp-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="7" rx="1.5"/><path d="M6 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></div>
+          <div class="sp-text"><span class="sp-title">访问凭证</span><span class="sp-desc">固定密码，永久链接</span></div>
+          <span class="sp-arrow">›</span>
+        </div>
       </div>
     </div>
   </footer>
@@ -161,6 +193,27 @@
       </div>
       <div class="modal-actions">
         <span class="modal-btn" id="syntaxCloseBtn">关闭</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="workspaceModal" hidden>
+    <div class="modal">
+      <h3>切换工作空间</h3>
+      <p class="modal-desc">当前路径：</p>
+      <p class="ws-current-path" id="wsCurrentPath">~/Documents</p>
+      <div class="input-row">
+        <input id="workspaceInput" type="text" placeholder="输入新路径，或点击右侧浏览" spellcheck="false" autocomplete="off">
+        <button class="browse-btn" id="workspaceBrowseBtn" title="浏览文件夹">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4.5h4l1.5 1.5H14v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5Z"/>
+          </svg>
+        </button>
+      </div>
+      <p class="modal-hint" id="workspaceHint">支持绝对路径或 ~ 开头的主目录路径</p>
+      <div class="modal-actions">
+        <span class="modal-btn" id="workspaceCancelBtn">取消</span>
+        <span class="modal-btn primary" id="workspaceSaveBtn">确认切换</span>
       </div>
     </div>
   </div>

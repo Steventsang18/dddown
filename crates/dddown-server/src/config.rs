@@ -26,6 +26,8 @@ pub struct EditorConfig {
     pub font_size: u32,
     #[serde(default = "default_tab_size")]
     pub tab_size: u32,
+    #[serde(skip_deserializing, default)]
+    pub workspace: String,
 }
 
 /// 快捷键覆盖：None = 使用前端默认键位
@@ -78,6 +80,7 @@ impl Default for EditorConfig {
         Self {
             font_size: default_font_size(),
             tab_size: default_tab_size(),
+            workspace: String::new(),
         }
     }
 }
@@ -108,6 +111,39 @@ impl Config {
             PathBuf::from(ws)
         }
     }
+}
+
+/// 在 TOML 文档上设置 server.workspace，保留其余字段
+fn apply_workspace(doc: &mut toml::Value, workspace: &str) -> Result<(), String> {
+    let root = doc.as_table_mut().ok_or("config 格式非法")?;
+    let server = root
+        .entry("server")
+        .or_insert_with(|| toml::Value::Table(toml::map::Map::new()));
+    server
+        .as_table_mut()
+        .ok_or("[server] 段格式非法")?
+        .insert("workspace".into(), toml::Value::String(workspace.into()));
+    Ok(())
+}
+
+/// 工作空间路径写入 config.toml（tmp+rename 原子写入）
+pub fn save_workspace(workspace: &str) -> Result<(), String> {
+    let path = Config::config_path();
+    let mut doc: toml::Value = std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|c| c.parse().ok())
+        .unwrap_or_else(|| toml::Value::Table(toml::map::Map::new()));
+
+    apply_workspace(&mut doc, workspace)?;
+
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let tmp = path.with_extension("toml.tmp");
+    std::fs::write(&tmp, toml::to_string(&doc).map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, &path).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 /// 在 TOML 文档上设置 server.token，保留其余字段
