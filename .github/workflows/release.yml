@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            label: macos-arm64
+          - os: macos-13
+            target: x86_64-apple-darwin
+            label: macos-x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            label: linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build frontend
+        working-directory: web
+        run: npm ci && npm run build
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }} -p dddown-server
+
+      - name: Prepare asset
+        shell: bash
+        run: |
+          EXT=""
+          [[ "${{ matrix.os }}" == "windows-latest" ]] && EXT=".exe"
+          BIN="dddown-${{ github.ref_name }}-${{ matrix.label }}${EXT}"
+          cp "target/${{ matrix.target }}/release/dddown${EXT}" "$BIN"
+          echo "BIN=$BIN" >> $GITHUB_ENV
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.BIN }}
