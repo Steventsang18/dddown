@@ -89,10 +89,3 @@ docs/
   ARCHITECTURE.md   # architecture documentation
 ```
 
-## Release Checklist
-
-1. `cd web && npm run build` — fresh frontend artifacts
-2. `cargo test` — all green
-3. Run `npm run test:e2e` (debug) and `E2E_BIN=release npm run test:e2e` (release binary)
-4. `cargo build --release` — the artifact is the single-file distributable
-5. Smoke test: run `dddown` in a clean environment (no `node_modules`, no `web/dist`); confirm the page loads, saving works, and external sync behaves

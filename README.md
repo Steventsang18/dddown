@@ -89,10 +89,3 @@ docs/
   ARCHITECTURE.md   # 架构文档
 ```
 
-## 发布清单
-
-1. `cd web && npm run build` 生成最新前端产物
-2. `cargo test` 全绿
-3. `npm run test:e2e`（debug）与 `E2E_BIN=release npm run test:e2e`（发布二进制）各跑一遍
-4. `cargo build --release` 产物即单文件分发物
-5. 冒烟：在干净环境（无 `node_modules`、无 `web/dist`）运行 `dddown`，确认页面、保存、外部同步正常
