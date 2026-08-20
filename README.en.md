@@ -15,13 +15,15 @@ Docs:
 - **Immersive writing**: typewriter scrolling (caret stays centered), focus mode (current paragraph highlighted, the rest faded), breathing caret, focused-line enhancement
 - **Inline rendering** (Typora-style interaction): when the caret leaves a line, it renders in place — KaTeX math (inline + display), image thumbnails, links showing only their text, real bold/italic styling; the source returns as soon as the caret lands back
 - **Live two-pane preview**: WASM parsing (comrak), morphdom incremental DOM updates, 150ms debounce; Mermaid diagrams, syntax highlighting (Shiki), `[[wikilink]]` cross-jumps; the preview follows the caret at heading level
-- **Typographic precision**: kerning, hanging punctuation, image captions, nested-list spacing — polished serif CJK typesetting
+- **Typographic precision**: kerning, hanging punctuation, image captions, nested-list spacing; CJK-optimized preview — sans-serif CJK font stack, 75em optimal measure, strict kinsoku line-breaking, automatic spacing between CJK and Latin text
 - **Snippet completion**: 76 built-in snippets (headings/tables/code blocks/meeting notes, etc.), Tab to accept, numbered field jumps; override or extend via `~/.dddown/snippets/*.json`
 - **Custom shortcuts**: override 7 actions in `config.toml` with `mod-shift-x` style strings; invalid config falls back to defaults
-- **File management**: sidebar file tree, create/delete, full-text search (⌘P), outline panel
-- **Reliable saving**: 500ms debounced autosave, atomic writes, filesystem watching (external changes sync in, echo loops prevented)
-- **Dual themes + font switching**: Book (light serif) and Night (desaturated dark blue-grey), remembered across reloads
-- **HTML export**: one keystroke exports a fully self-contained HTML (inlined CSS, base64 fonts — works offline)
+- **File management**: sidebar file tree, create/delete, full-text search (⌘P), outline panel; one-click Markdown import into the workspace
+- **Reliable saving**: 500ms debounced autosave, atomic writes, draft recovery, conflict detection, filesystem watching (external changes sync in, echo loops prevented)
+- **Four themes + font switching**: Book/Modern palettes × light/dark modes, serif/sans freely combined, preferences remembered separately
+- **Export**: one keystroke exports a fully self-contained HTML (inlined CSS — works offline); publication-grade PDF (@page headers/footers/page numbers, auto heading numbering, break-safe blocks)
+- **Installable PWA**: manifest + Service Worker, installs as a standalone desktop app; all static assets cached for instant launch, the app shell still opens if the backend is briefly unreachable; credentials remembered automatically — no token needed on cold launch
+- **Ready out of the box**: first launch (empty workspace) seeds a welcome document — project intro, quick-start guide and a full-format typesetting demo; set a fixed access password and hot-switch workspaces (native folder picker) from the UI
 
 ## Quick Start
 
@@ -48,6 +50,15 @@ cargo build --release
 ./target/release/dddown --workspace ~/my-notes
 ```
 
+## Installing as a Desktop App (PWA)
+
+Start the server, then visit the tokenized URL in your browser and install:
+
+- **Chrome / Edge**: the install icon on the right of the address bar, or menu → “Install dddown”
+- **macOS Safari**: Share menu → “Add to Dock”
+
+Once installed, launch it straight from the dock — standalone window, no browser chrome. The Service Worker caches every static asset (cache version rotates automatically per build); after your first tokenized visit the credential is remembered, so cold launches need no URL parameters. Production builds only — dev mode is untouched, and `?nosw=1` disables it at any time.
+
 ## Development
 
 ```bash
@@ -67,7 +78,7 @@ Logging: `RUST_LOG=dddown_server=debug cargo run`.
 # Rust unit tests (dddown-core path validation + dddown-server config/search/snippets)
 cargo test
 
-# Browser E2E (12 core flows, isolated HOME, fixed port 60101)
+# Browser E2E (18 core flows, isolated HOME, fixed port 60101)
 cd web && npm run test:e2e
 
 # Validate the release binary (E2E runs against target/release/dddown)

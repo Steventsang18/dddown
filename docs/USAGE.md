@@ -182,8 +182,8 @@ search = "alt-f"       # 搜索改 Alt+F
 
 ## 主题与字体
 
-- **主题**：书卷（亮色宋体）↔ 夜色（低饱和深蓝灰），⌘⇧T / Ctrl+Shift+T 循环切换，选择随刷新记忆
-- **字体**：宋体（衬线，默认）↔ 无衬线，⌘⇧F / Ctrl+Shift+F 切换；等宽字体（JetBrains Mono）本地打包，无网络也能渲染
+- **主题**：书卷/现代两套配色 × 亮暗两模式共四种，⌘⇧T / Ctrl+Shift+T 循环切换，选择随刷新记忆
+- **字体**：宋体（衬线）↔ 无衬线，⌘⇧F / Ctrl+Shift+F 切换，与主题解耦自由组合；预览区固定无衬线中文排版；等宽字体（JetBrains Mono）本地打包，无网络也能渲染
 
 ## HTML 导出
 
@@ -268,5 +268,5 @@ cd web && npm run dev
 
 ```bash
 cargo test                    # Rust 单测
-cd web && npm run test:e2e    # Playwright E2E（12 条核心流程）
+cd web && npm run test:e2e    # Playwright E2E（18 条核心流程）
 ```

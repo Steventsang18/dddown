@@ -57,7 +57,7 @@ dddown/
 │   ├── tsconfig.json
 │   ├── playwright.config.ts
 │   ├── e2e/
-│   │   └── core.spec.ts    # 12 条 E2E 用例
+│   │   └── core.spec.ts    # 18 条 E2E 用例
 │   └── src/
 │       ├── main.ts         # 前端入口：状态管理、事件绑定
 │       ├── api/
@@ -306,7 +306,7 @@ cargo test
 cd web && npm run test:e2e
 ```
 
-12 条用例，串行执行，共享一个测试服务端（端口 60101，固定 token）：
+18 条用例，串行执行，共享一个测试服务端（端口 60101，固定 token）：
 
 | # | 用例 | 验证点 |
 |---|---|---|
@@ -322,6 +322,12 @@ cd web && npm run test:e2e
 | 10 | 草稿恢复 | 种 localStorage → reload → 恢复 |
 | 11 | 并发冲突 | 过期基线 → 409 → 不覆盖 |
 | 12 | 凭证设置 | 格式校验 → 热生效 → URL 更新 |
+| 13 | 工作区热切换 | API 切换 → 读写与 UI 跟随 |
+| 14 | PDF 导出 | 中文页眉页脚不走 Helvetica 回退防线 |
+| 15 | Markdown 导入 | 写入工作区并打开 |
+| 16 | PWA manifest | 合法且图标齐全 |
+| 17 | Service Worker | 生产构建注册并接管页面 |
+| 18 | 凭证记忆 | PWA 冷启动（裸地址无 token）仍可访问 |
 
 **注意**：debug 模式前端走 `web/dist`，源码修改需先 `npm run build` 才能被 E2E 看到。
 
