@@ -37,7 +37,7 @@ cargo run
 
 The terminal prints a tokenized URL — that's your entry point. See the [Quick Start guide](docs/quickstart.html) for details.
 
-> **Windows note**: the terminal window *is* the server — minimize it, don't close it. You can also double-click `dddown.exe` (or a shortcut) to run it standalone. Setting a fixed access password first is recommended, so the URL survives restarts.
+> **Windows note**: the terminal window *is* the server — minimize it, don't close it. You can also double-click `dddown.exe` (or a shortcut) to run it standalone. Setting a fixed access password first is recommended, so the URL survives restarts. For auto-start on boot (no terminal needed day-to-day), see the [keep-running guide](docs/USAGE.md#常驻运行开机自启无需手动开终端).
 
 ## Building the Release Binary
 
