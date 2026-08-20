@@ -27,6 +27,10 @@ Docs:
 
 ## Quick Start
 
+**Just use it**: grab the single-file binary for your platform from [Releases](https://github.com/3Down/dddown/releases), then follow the [install guide](docs/USAGE.md#发布二进制从-github-release-下载推荐) (covers Windows SmartScreen / macOS Gatekeeper).
+
+**Run from source**:
+
 ```bash
 # 1. Build the frontend
 cd web && npm install && npm run build && cd ..

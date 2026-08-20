@@ -8,13 +8,58 @@ dddown 是本地优先的 Markdown 编辑器：所有数据都在你自己的工
 
 前置依赖：Rust stable、Node.js 18+。步骤见 [快速开始](quickstart.html)。
 
-### 发布二进制
+### 发布二进制（从 GitHub Release 下载，推荐）
 
-`target/release/dddown` 是自包含单文件（约 18MB），拷到任何机器直接运行，不需要 Node：
+到 [Releases 页](https://github.com/3Down/dddown/releases) 下载最新版，按平台对号：
+
+| 你的系统 | 下载文件 |
+| --- | --- |
+| Apple Silicon Mac（M 系列） | `dddown-vX-macos-arm64` |
+| Intel Mac | `dddown-vX-macos-x86_64` |
+| Windows 10/11 | `dddown-vX-windows-x86_64.exe` |
+| Linux（主流发行版） | `dddown-vX-linux-x86_64` |
+
+**Windows**
+
+1. 首次打开会被 SmartScreen 拦：点「更多信息」→「仍要运行」（项目未购买签名证书，正常现象）
+2. 建议把 exe 移到固定目录，如 `D:\Tools\dddown\`，双击运行，终端窗口出现即服务已启动，浏览器自动打开编辑器
+3. 想指定笔记目录：给 exe 建快捷方式，右键 → 属性 →「目标」末尾追加 `--workspace D:\笔记`
+
+**macOS**
+
+1. 下载后终端执行（去掉下载隔离标记，只需一次）：
+
+   ```bash
+   xattr -d com.apple.quarantine ~/Downloads/dddown-v*-macos-*
+   ```
+
+2. 移到常用位置并运行：
+
+   ```bash
+   mkdir -p ~/Applications && mv ~/Downloads/dddown-v*-macos-* ~/Applications/dddown
+   ~/Applications/dddown
+   ```
+
+   终端打印带 token 的 URL 即入口，浏览器也会自动打开。指定笔记目录用 `~/Applications/dddown --workspace ~/my-notes`
+
+**Linux**
 
 ```bash
-./dddown                    # 使用默认工作区 ~/Documents/Notes
-./dddown --workspace ~/my-notes   # 指定工作区
+chmod +x dddown-v*-linux-x86_64
+./dddown-v*-linux-x86_64
+```
+
+**首次启动后**：在界面「设置」里设固定访问密码，再按「常驻运行」一节配好固定端口与开机自启，之后就是点图标进编辑器、全程零命令。
+
+### 从源码构建二进制
+
+`target/release/dddown` 是自包含单文件（约 18MB），前端资源已嵌入，拷到任何机器直接运行，不需要 Node：
+
+```bash
+cd web && npm ci && npm run build   # 先构建前端（产物会被嵌入）
+cargo build --release -p dddown-server
+./target/release/dddown                    # 默认工作区 ~/Documents/Notes
+./target/release/dddown --workspace ~/my-notes   # 指定工作区
 ```
 
 ### 启动行为

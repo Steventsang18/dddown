@@ -27,6 +27,10 @@
 
 ## 快速开始
 
+**直接用**：到 [Releases](https://github.com/3Down/dddown/releases) 下载对应平台的单文件可执行程序，按 [安装指引](docs/USAGE.md#发布二进制从-github-release-下载推荐) 三步跑起来（含 Windows SmartScreen / macOS Gatekeeper 的处理）。
+
+**从源码跑**：
+
 ```bash
 # 1. 构建前端
 cd web && npm install && npm run build && cd ..
