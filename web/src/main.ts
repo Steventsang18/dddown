@@ -14,6 +14,7 @@ import { TocPanel } from './toc';
 import { exportCurrentFile, exportPdf } from './export';
 import { setupScrollSync } from './sync';
 import { buildShortcutMap } from './shortcuts';
+import { toast } from './toast';
 import { EditorView } from '@codemirror/view';
 
 // ========== DOM References ==========
@@ -147,7 +148,7 @@ async function init() {
       await loadFile(path);
       sidebar.refresh();
     },
-    onNotFound: (name) => showStatus(`未找到笔记 ${name}`),
+    onNotFound: (name) => toast(`未找到笔记 ${name}`, 'warn'),
   });
 
   // 性能基准模式：?bench 动态加载 bench.ts，跳过文件加载
@@ -442,14 +443,6 @@ function markClean() {
   saveTextEl.textContent = '已保存';
 }
 
-/** 状态栏临时提示，2 秒后恢复保存状态 */
-function showStatus(text: string) {
-  saveTextEl.textContent = text;
-  setTimeout(() => {
-    saveTextEl.textContent = isDirty ? '未保存' : '已保存';
-  }, 2000);
-}
-
 function scheduleAutoSave() {
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   // 防抖 500ms，但 dirty 超过 MAX_DIRTY_MS 时立即保存
@@ -474,6 +467,7 @@ async function saveCurrentFile() {
       onConflict();
     } else {
       saveTextEl.textContent = '保存失败';
+      toast('保存失败，请稍后重试', 'error');
     }
   }
 }
@@ -488,6 +482,7 @@ function onSaved() {
 function onConflict() {
   // 保留用户未保存内容不强制覆盖，等待用户处理
   saveTextEl.textContent = '⚠ 保存冲突：文件已被其他窗口修改，本次未写入';
+  toast('保存冲突：文件已被其他窗口修改，本次未写入', 'warn');
 }
 
 // ========== 持久化工具 ==========
@@ -531,8 +526,8 @@ function onWsMessage(data: any) {
       handleExternalChange(data.path);
       break;
     case 'error':
-      console.error('[ws] error:', data.message);
       saveTextEl.textContent = '保存失败';
+      toast(data.message ? `保存失败：${data.message}` : '保存失败', 'error');
       break;
   }
 }
@@ -565,7 +560,7 @@ async function loadFile(path: string) {
     dirtySince = 0;
     markDirty();
     scheduleAutoSave();
-    showStatus('已恢复未保存内容');
+    toast('已恢复未保存内容');
   } else {
     markClean();
   }
@@ -656,10 +651,10 @@ async function doExport() {
   try {
     await renderNow(editorView.state.doc.toString(), previewEl);
     const name = await exportCurrentFile(currentFile, previewEl);
-    showStatus(`已导出 ${name}`);
+    toast(`已导出 ${name}`);
   } catch (err) {
     console.error('[export] failed:', err);
-    showStatus('导出失败');
+    toast('HTML 导出失败', 'error');
   }
 }
 
@@ -668,10 +663,10 @@ async function doExportPdf() {
   try {
     await renderNow(editorView.state.doc.toString(), previewEl);
     await exportPdf(currentFile, previewEl);
-    showStatus('已导出 PDF');
+    toast('已导出 PDF');
   } catch (err) {
     console.error('[export-pdf] failed:', err);
-    showStatus('PDF 导出失败');
+    toast('PDF 导出失败', 'error');
   }
 }
 
@@ -688,10 +683,10 @@ function triggerImport() {
       await writeFile(name, content, '');
       sidebar.refresh();
       await loadFile(name);
-      showStatus(`已导入 ${name}`);
+      toast(`已导入 ${name}`);
     } catch (err) {
       console.error('[import] failed:', err);
-      showStatus('导入失败');
+      toast('导入失败', 'error');
     }
   };
   input.click();
@@ -734,7 +729,7 @@ async function saveTokenSetting() {
     url.searchParams.set('token', token);
     history.replaceState(null, '', url);
     tokenModalEl.hidden = true;
-    showStatus('密码已设置，地址已更新');
+    toast('密码已设置，地址已更新');
   } catch (err) {
     tokenHintEl.textContent = `⚠ ${err instanceof Error ? err.message : '设置失败'}`;
   }
@@ -772,7 +767,7 @@ async function saveWorkspaceSetting() {
       fileNameEl.textContent = 'untitled.md';
       currentFile = '';
     }
-    showStatus('工作空间已切换');
+    toast('工作空间已切换');
   } catch (err) {
     workspaceHintEl.textContent = `⚠ ${err instanceof Error ? err.message : '切换失败'}`;
   }
@@ -865,4 +860,7 @@ function insertFormat(action: string) {
 }
 
 // ========== Start ==========
-init().catch(console.error);
+init().catch((err) => {
+  console.error('[init] failed:', err);
+  toast('初始化失败，请刷新页面', 'error');
+});

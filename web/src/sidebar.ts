@@ -1,4 +1,5 @@
 import { fetchTree, createFile, deleteFile, type TreeNode } from './api/client';
+import { toast } from './toast';
 
 /** 文件树侧栏：渲染、切换文件、新建、删除、外部变更刷新 */
 
@@ -73,6 +74,7 @@ export class Sidebar {
         await this.refresh();
       } catch (err) {
         console.error('[sidebar] delete failed:', err);
+        toast(`删除失败：${node.name}`, 'error');
       }
     });
 
@@ -108,6 +110,7 @@ export class Sidebar {
         await this.openFile(path);
       } catch (err) {
         console.error('[sidebar] create failed:', err);
+        toast(`新建失败：${path}`, 'error');
       }
     });
   }

@@ -1,4 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
+import { inflateSync } from 'node:zlib';
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * 核心流程 E2E：单 worker 串行，共享一个服务端与 workspace。
@@ -221,14 +224,17 @@ test('11. 并发冲突：基线过期拒绝写入不静默覆盖', async ({ page
   });
   expect(fresh.ok()).toBeTruthy();
 
-  // UI 层验证：外部修改后本窗口继续编辑，保存被拒时给出冲突提示。
-  // dirty 状态下 watcher 同步被阻断，基线不会推进，冲突必然发生
-  await writeDisk(page, original + '\n其他窗口写入');
+  // UI 层验证：先输入使窗口 dirty（watcher 补偿重载被确定性阻断，基线无法推进），
+  // 再做外部写入，最后 autosave 携带过期基线落盘 → 必然 409。
+  // 输入→外部写入耗时 ≪ 500ms autosave 防抖，无时序竞争
   await page.locator(EDITOR).click();
   await page.keyboard.press(`${MOD}+End`);
   await page.keyboard.press('Enter');
   await page.keyboard.type('本窗口输入');
-  await expect(page.locator(SAVE_TEXT)).toContainText('冲突', { timeout: 5000 });
+  await writeDisk(page, original + '\n其他窗口写入');
+  // 冲突提示（状态栏 + Toast 双通道）
+  await expect(page.locator(SAVE_TEXT)).toContainText('冲突', { timeout: 8000 });
+  await expect(page.locator('.toast.warn')).toContainText('保存冲突');
   // 冲突时外部内容仍在磁盘，未被静默覆盖
   expect(await readDisk(page)).toContain('其他窗口写入');
 
@@ -265,4 +271,100 @@ test('12. 界面设置固定访问密码', async ({ page }) => {
     data: { token: TOKEN },
   });
   expect(restore.ok()).toBeTruthy();
+});
+
+test('13. 工作空间热切换：API 切换后读写与 UI 跟随', async ({ page }) => {
+  // canonicalize 会把 /tmp 解析成 /private/tmp，断言用规范化后的路径
+  const ALT = '/tmp/dddown-e2e-home/notes-alt';
+  const ALT_CANON = '/private/tmp/dddown-e2e-home/notes-alt';
+  mkdirSync(ALT, { recursive: true });
+  writeFileSync(join(ALT, 'alt-note.md'), '# 备用空间\n\n切换验证内容');
+  try {
+    await openApp(page);
+    const res = await page.request.post(`${API}/api/settings/workspace?token=${TOKEN}`, {
+      data: { workspace: ALT },
+    });
+    expect(res.ok()).toBeTruthy();
+    expect(await res.json()).toBe(ALT_CANON);
+
+    // 读写跟随新空间
+    const alt = await page.request.get(`${API}/api/file/read?path=alt-note.md&token=${TOKEN}`);
+    expect(await alt.text()).toContain('切换验证内容');
+    const gone = await page.request.get(`${API}/api/file/read?path=welcome.md&token=${TOKEN}`);
+    expect(gone.ok()).toBeFalsy();
+
+    // UI 跟随：重载后加载新空间文件与文件树
+    await page.evaluate(() => localStorage.setItem('dddown:lastFile', 'alt-note.md'));
+    await page.reload();
+    await page.waitForSelector('.cm-editor');
+    await expect(page.locator(FILE_NAME)).toHaveText('alt-note.md');
+    await expect(page.locator(`${PREVIEW} h1`)).toHaveText('备用空间');
+    await expect(page.locator('#fileTree')).toContainText('alt-note.md');
+  } finally {
+    // 现场恢复：切回原空间（同样用规范化路径），后续用例依赖 welcome.md
+    const back = await page.request.post(`${API}/api/settings/workspace?token=${TOKEN}`, {
+      data: { workspace: '/private/tmp/dddown-e2e-home/notes' },
+    });
+    expect(back.ok()).toBeTruthy();
+    rmSync(ALT, { recursive: true, force: true });
+  }
+});
+
+/** 解压 PDF 全部内容流（zlib），用于字节级断言 */
+function pdfContentStreams(buf: Buffer): Buffer[] {
+  const out: Buffer[] = [];
+  for (const m of buf.toString('latin1').matchAll(/stream\r?\n([\s\S]*?)endstream/g)) {
+    try {
+      out.push(inflateSync(Buffer.from(m[1], 'latin1')));
+    } catch {
+      /* 非 zlib 流（如图片）跳过 */
+    }
+  }
+  return out;
+}
+
+test('14. PDF 导出：中文页眉页脚不走 Helvetica 回退防线', async ({ page }) => {
+  await openApp(page);
+  // UI 全链路：菜单触发 → 浏览器下载
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#settingsBtn').click();
+  await page.locator('#exportToggle').click();
+  await page.locator('#menuExportPDF').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('welcome.pdf');
+  const buf = readFileSync(await download.path());
+  expect(buf.subarray(0, 8).toString()).toBe('%PDF-1.4');
+
+  // 防线一：必须嵌入 Unicode 回退字体（页眉页脚中文不再写死 Helvetica）
+  const fonts = [...buf.toString('latin1').matchAll(/\/BaseFont\s*\/([A-Za-z0-9+\-]+)/g)].map((m) => m[1]);
+  expect(fonts.some((f) => f.includes('ArialUnicodeMS'))).toBeTruthy();
+
+  // 防线二：内容流文本指令零个 '?'（旧 bug 的 WinAnsi 编码失败特征）
+  let qMarks = 0;
+  for (const s of pdfContentStreams(buf)) {
+    for (const t of s.toString('latin1').matchAll(/\((.*?)\)\s*Tj/g)) qMarks += (t[1].match(/\?/g) ?? []).length;
+  }
+  expect(qMarks).toBe(0);
+
+  await expect(page.locator('.toast')).toContainText('已导出 PDF');
+});
+
+test('15. Markdown 导入：写入工作区并打开', async ({ page }) => {
+  await openApp(page);
+  const src = '/tmp/dddown-e2e-home/import-src.md';
+  writeFileSync(src, '# 导入测试\n\n外部文件内容');
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#settingsBtn').click();
+  await page.locator('#menuImport').click();
+  await (await chooserPromise).setFiles(src);
+
+  await expect(page.locator(FILE_NAME)).toHaveText('import-src.md');
+  await expect(page.locator(EDITOR)).toContainText('外部文件内容');
+  expect(await readDisk(page, 'import-src.md')).toContain('外部文件内容');
+  await expect(page.locator('.toast')).toContainText('已导入');
+
+  // 清理
+  const del = await page.request.delete(`${API}/api/file?path=import-src.md&token=${TOKEN}`);
+  expect(del.ok()).toBeTruthy();
 });
