@@ -3,6 +3,7 @@ mod embed;
 mod handler;
 mod routes;
 mod search;
+mod seed;
 mod snippets;
 mod watcher;
 mod ws;
@@ -89,6 +90,9 @@ async fn main() {
     tokio::fs::create_dir_all(&workspace)
         .await
         .expect("failed to create workspace directory");
+
+    // 首次使用（空工作空间）写入欢迎文档，在 watcher 启动前完成，避免自身写入触发事件
+    seed::seed_if_empty(&workspace).await;
 
     let token = cfg.server.token.clone().unwrap_or_else(generate_token);
     let (notify_tx, _notify_rx) = ws::create_notify_channel();
