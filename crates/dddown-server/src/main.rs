@@ -59,8 +59,8 @@ fn parse_cli_workspace() -> Option<PathBuf> {
         if args[i] == "--workspace" && i + 1 < args.len() {
             let p = &args[i + 1];
             if p.starts_with('~') {
-                let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-                return Some(PathBuf::from(p.replacen('~', &home, 1)));
+                let home = config::dirs_home();
+                return Some(PathBuf::from(p.replacen('~', &home.to_string_lossy(), 1)));
             }
             return Some(PathBuf::from(p));
         }

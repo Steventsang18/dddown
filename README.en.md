@@ -37,6 +37,8 @@ cargo run
 
 The terminal prints a tokenized URL — that's your entry point. See the [Quick Start guide](docs/quickstart.html) for details.
 
+> **Windows note**: the terminal window *is* the server — minimize it, don't close it. You can also double-click `dddown.exe` (or a shortcut) to run it standalone. Setting a fixed access password first is recommended, so the URL survives restarts.
+
 ## Building the Release Binary
 
 The release build embeds `web/dist` into the executable — ship a single binary:

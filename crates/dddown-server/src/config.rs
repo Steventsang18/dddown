@@ -49,8 +49,10 @@ fn default_workspace() -> String {
 fn default_font_size() -> u32 { 15 }
 fn default_tab_size() -> u32 { 2 }
 
-fn dirs_home() -> PathBuf {
+/// 用户主目录：macOS/Linux 读 HOME，Windows 无 HOME 环境变量需回退 USERPROFILE
+pub(crate) fn dirs_home() -> PathBuf {
     std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("."))
 }
