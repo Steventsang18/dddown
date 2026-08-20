@@ -9,6 +9,7 @@ use axum::{
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
+#[cfg(debug_assertions)]
 use tower_http::services::ServeDir;
 
 use crate::config;

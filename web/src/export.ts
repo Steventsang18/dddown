@@ -62,8 +62,72 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-/** 构建自包含 HTML（PDF 导出与 HTML 导出共用） */
-export async function buildExportHtml(previewEl: HTMLElement): Promise<string> {
+/** PDF 专用排版 CSS：分页防断裂 + 出版级细节。
+ * 页眉页脚用 @page margin boxes（走 ironpress 完整字体回退管线，中文正常），
+ * 不用 Builder API 的 .header()/.footer()（内部写死 Helvetica，中文变 ?）。
+ * counter(page)/counter(pages) 由 ironpress 逐页解析 */
+function pdfCss(title: string): string {
+  // 转义 CSS 字符串字面量中的反斜杠与双引号，标题含路径分隔符无需处理
+  const safe = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `
+@page {
+  margin: 62pt 68pt;
+  @top-center {
+    content: "${safe}";
+    font-size: 9pt;
+    color: #999;
+  }
+  @bottom-center {
+    content: "第 " counter(page) " 页 · 共 " counter(pages) " 页";
+    font-size: 9pt;
+    color: #999;
+  }
+}
+.preview {
+  max-width: none;
+  padding: 0;
+}
+/* 标题不孤悬在页底 */
+.preview h1, .preview h2, .preview h3, .preview h4 {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+/* 标题编号（ironpress 无 CSS counter，JS 预计算） */
+.preview h1[data-num]::before { content: attr(data-num) "\\00a0\\00a0"; }
+.preview h2[data-num]::before { content: attr(data-num) "\\00a0\\00a0"; }
+.preview h3[data-num]::before { content: attr(data-num) "\\00a0\\00a0"; }
+/* 块级元素不跨页劈裂 */
+.preview blockquote, .preview pre, .preview .table-wrap,
+.preview img, .preview .mermaid, .preview .markdown-alert {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+/* 段落孤行控制：页底至少留 2 行，页顶至少带 2 行 */
+.preview p, .preview li {
+  orphans: 2;
+  widows: 2;
+}
+/* 代码块横向溢出截断，不撑破页面 */
+.preview pre { overflow: hidden; }
+/* 链接去下划线动画，PDF 中保留颜色即可 */
+.preview a { background-image: none; }
+`;
+}
+
+/** 标题自动编号：遍历 h1~h3 生成 1 / 1.1 / 1.1.1，写入 data-num 供 CSS ::before 消费 */
+function numberHeadings(previewEl: HTMLElement): void {
+  const counters = [0, 0, 0];
+  previewEl.querySelectorAll('h1, h2, h3').forEach((h) => {
+    const lvl = parseInt(h.tagName.slice(1), 10) - 1;
+    counters[lvl]++;
+    for (let i = lvl + 1; i < 3; i++) counters[i] = 0;
+    h.setAttribute('data-num', counters.slice(0, lvl + 1).join('.'));
+  });
+}
+
+/** 构建自包含 HTML（PDF 导出与 HTML 导出共用）；pdf=true 时注入打印排版 */
+export async function buildExportHtml(previewEl: HTMLElement, pdf = false): Promise<string> {
+  if (pdf) numberHeadings(previewEl);
   const path = previewEl.dataset.path || 'export';
   const css = await inlineFonts(`${previewCss}\n${katexCss}\n${collectDynamicStyles()}`);
   const tokens = collectTokens();
@@ -78,6 +142,7 @@ export async function buildExportHtml(previewEl: HTMLElement): Promise<string> {
     '<style>',
     `:root {\n${tokens}\n}`,
     css,
+    pdf ? pdfCss(title) : '',
     '</style>',
     '</head>',
     `<body class="${document.body.className}">`,
@@ -93,10 +158,10 @@ export async function exportCurrentFile(path: string, previewEl: HTMLElement): P
   return exportHtml(path, html);
 }
 
-/** PDF 导出：构建 HTML → 服务端 ironpress 渲染 → 下载 */
+/** PDF 导出：构建 HTML（含打印排版）→ 服务端 ironpress 渲染 → 下载 */
 export async function exportPdf(path: string, previewEl: HTMLElement): Promise<void> {
   previewEl.dataset.path = path;
-  const html = await buildExportHtml(previewEl);
+  const html = await buildExportHtml(previewEl, true);
   const token = new URLSearchParams(window.location.search).get('token') || '';
   const res = await fetch(`/api/export/pdf?token=${token}`, {
     method: 'POST',

@@ -214,11 +214,16 @@ pub async fn export_html(base: &Path, req: &ExportRequest) -> Result<String, Sta
         .to_string())
 }
 
-/// HTML → PDF：ironpress 纯 Rust 渲染，返回 PDF 字节
+/// HTML → PDF：ironpress 纯 Rust 渲染，返回 PDF 字节。
+/// A4 + 页边距 + 页眉页脚全部由前端 CSS @page 声明（单一配置源），
+/// margin boxes 走完整字体回退管线，中文正常；
+/// 不用 Builder 的 .header()/.footer()（内部写死 Helvetica，中文变 ?）
 pub async fn export_pdf(req: &ExportRequest) -> Result<Vec<u8>, StatusCode> {
     let html = req.html.clone();
     tokio::task::spawn_blocking(move || {
-        ironpress::html_to_pdf(&html)
+        ironpress::HtmlConverter::new()
+            .page_size(ironpress::PageSize::A4)
+            .convert(&html)
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
     })
     .await
