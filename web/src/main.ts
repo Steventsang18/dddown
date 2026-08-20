@@ -5,7 +5,7 @@ import '@fontsource/jetbrains-mono/500.css';
 import { setFocusMode, isFocusMode } from './editor/focus';
 import { mergeUserSnippets } from './editor/snippets';
 import { initParser, renderPreview, renderNow, onRenderDone, setWikilinkCallbacks } from './preview/render';
-import { readFile, writeFile, fetchSnippets, fetchShortcuts, fetchConfig, setToken, setWorkspace, browseFolder } from './api/client';
+import { readFile, writeFile, fetchSnippets, fetchShortcuts, fetchConfig, setToken, setWorkspace, browseFolder, currentToken, forgetToken } from './api/client';
 import { SocketClient } from './api/socket';
 import { initTheme, cycleTheme, toggleFont, themeLabel } from './theme';
 import { Sidebar } from './sidebar';
@@ -165,6 +165,7 @@ async function init() {
     console.warn('[init] could not load file, falling back:', err);
     if (String(err).includes('401')) {
       // 凭证失效：静态资源能打开但所有 API 被拒，给出明确指引而非空白页
+      forgetToken();
       saveTextEl.textContent = '凭证失效';
       renderPreview('> 访问凭证已失效或服务已重启，请从服务终端输出的最新地址重新进入。', previewEl);
       return;
@@ -703,7 +704,7 @@ function toggleFocusMode() {
 // 关页兑底：autosave/WS 没来得及完成时用 sendBeacon 落盘（浏览器保证发出）
 window.addEventListener('pagehide', () => {
   if (!isDirty || !editorView || !currentFile) return;
-  const token = new URLSearchParams(location.search).get('token') || '';
+  const token = currentToken();
   const body = JSON.stringify({ path: currentFile, content: editorView.state.doc.toString(), base_hash: baseHash });
   navigator.sendBeacon(`/api/file/write?token=${token}`, new Blob([body], { type: 'application/json' }));
 });

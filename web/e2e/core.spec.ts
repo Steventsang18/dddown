@@ -404,3 +404,17 @@ test('17. Service Worker：生产构建注册并接管页面', async ({ page }) 
   });
   expect(cacheOk).toBeTruthy();
 });
+
+test('18. 凭证记忆：PWA 冷启动（裸地址无 token）仍可访问', async ({ page }) => {
+  // 首次带 token 进入：凭证写入 localStorage
+  await openApp(page);
+  await expect(page.locator(EDITOR)).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('dddown-token'))).toBe(TOKEN);
+
+  // 模拟 PWA 经 start_url 冷启动：同 origin 裸地址，URL 不带查询串
+  await page.goto(`${API}/`);
+  await expect(page.locator(EDITOR)).toBeVisible();
+  // 文件树与预览正常加载，未落入「凭证失效」分支
+  await expect(page.locator(PREVIEW)).not.toContainText('访问凭证已失效');
+  await expect(page.locator(SAVE_TEXT)).not.toHaveText('凭证失效');
+});

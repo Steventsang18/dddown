@@ -34,9 +34,28 @@ export interface EditorConfig {
   workspace?: string;
 }
 
+const TOKEN_KEY = 'dddown-token';
+
+/**
+ * 访问凭证唯一入口：URL 参数优先（首次进入/换密码），并写入 localStorage；
+ * URL 无 token 时回退记忆值——PWA 经 manifest start_url 冷启动不带查询串，靠它续上凭证
+ */
+export function currentToken(): string {
+  const fromUrl = new URLSearchParams(window.location.search).get('token');
+  if (fromUrl) {
+    try { localStorage.setItem(TOKEN_KEY, fromUrl); } catch { /* 隐私模式忽略 */ }
+    return fromUrl;
+  }
+  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
+}
+
+/** 凭证被服务端拒绝时清除记忆值，避免拿旧钥匙反复碰壁 */
+export function forgetToken(): void {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* 忽略 */ }
+}
+
 async function getToken(): Promise<string> {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('token') || '';
+  return currentToken();
 }
 
 export async function readFile(path: string): Promise<string> {

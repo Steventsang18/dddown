@@ -1,6 +1,6 @@
 import previewCss from './styles/preview.css?inline';
 import katexCss from 'katex/dist/katex.min.css?inline';
-import { exportHtml } from './api/client';
+import { exportHtml, currentToken } from './api/client';
 
 /**
  * HTML 导出：所见即所得。
@@ -162,7 +162,7 @@ export async function exportCurrentFile(path: string, previewEl: HTMLElement): P
 export async function exportPdf(path: string, previewEl: HTMLElement): Promise<void> {
   previewEl.dataset.path = path;
   const html = await buildExportHtml(previewEl, true);
-  const token = new URLSearchParams(window.location.search).get('token') || '';
+  const token = currentToken();
   const res = await fetch(`/api/export/pdf?token=${token}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -1,3 +1,5 @@
+import { currentToken } from './client';
+
 type MessageHandler = (data: any) => void;
 
 export class SocketClient {
@@ -15,10 +17,8 @@ export class SocketClient {
   }
 
   private buildUrl(): string {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token') || '';
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${proto}//${location.host}/ws?token=${token}`;
+    return `${proto}//${location.host}/ws?token=${currentToken()}`;
   }
 
   connect(): void {
