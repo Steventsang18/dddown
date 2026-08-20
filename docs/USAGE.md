@@ -14,33 +14,22 @@ dddown 是本地优先的 Markdown 编辑器：所有数据都在你自己的工
 
 | 你的系统 | 下载文件 |
 | --- | --- |
-| Apple Silicon Mac（M 系列） | `dddown-vX-macos-arm64` |
-| Intel Mac | `dddown-vX-macos-x86_64` |
+| Apple Silicon Mac（M 系列） | `DDDown-vX-macos-arm64.dmg` |
+| Intel Mac | `DDDown-vX-macos-x86_64.dmg` |
 | Windows 10/11 | `dddown-vX-windows-x86_64.exe` |
 | Linux（主流发行版） | `dddown-vX-linux-x86_64` |
 
-**Windows**
+**macOS（像普通 App 一样拖装）**
 
-1. 首次打开会被 SmartScreen 拦：点「更多信息」→「仍要运行」（项目未购买签名证书，正常现象）
-2. 建议把 exe 移到固定目录，如 `D:\Tools\dddown\`，双击运行，终端窗口出现即服务已启动，浏览器自动打开编辑器
-3. 想指定笔记目录：给 exe 建快捷方式，右键 → 属性 →「目标」末尾追加 `--workspace D:\笔记`
+1. 打开 dmg，把 DDDown 拖进 Applications
+2. 双击启动。首次会被 Gatekeeper 拦：系统设置 → 隐私与安全性 → 点「仍要打开」（只需一次；项目未购买 Apple 公证，属正常现象）
+3. 浏览器自动打开编辑器。服务在后台运行，无终端无 Dock 图标；退出用 `pkill dddown` 或活动监视器
 
-**macOS**
+**Windows（双击即用，无黑窗口）**
 
-1. 下载后终端执行（去掉下载隔离标记，只需一次）：
-
-   ```bash
-   xattr -d com.apple.quarantine ~/Downloads/dddown-v*-macos-*
-   ```
-
-2. 移到常用位置并运行：
-
-   ```bash
-   mkdir -p ~/Applications && mv ~/Downloads/dddown-v*-macos-* ~/Applications/dddown
-   ~/Applications/dddown
-   ```
-
-   终端打印带 token 的 URL 即入口，浏览器也会自动打开。指定笔记目录用 `~/Applications/dddown --workspace ~/my-notes`
+1. 首次会被 SmartScreen 拦：点「更多信息」→「仍要运行」（项目未购买签名证书，正常现象）
+2. 建议把 exe 移到固定目录（如 `D:\Tools\dddown\`）再双击：无终端窗口，浏览器自动打开编辑器
+3. 想指定笔记目录：给 exe 建快捷方式，右键 → 属性 →「目标」末尾追加 `--workspace D:\笔记`；退出用任务管理器结束 `dddown.exe`
 
 **Linux**
 
@@ -65,14 +54,14 @@ cargo build --release -p dddown-server
 ### 启动行为
 
 - 监听 `127.0.0.1`，默认随机端口（不会和别的程序抢 8080）
-- 启动时自动打开默认浏览器
+- 启动时自动打开默认浏览器，浏览器地址栏即入口（带 token 的完整 URL）
 - 每次启动随机生成 token，访问必须带上（见 FAQ「token 是什么」）
 - 工作区目录不存在时自动创建
-- 终端输出的 URL 即入口，例如 `http://127.0.0.1:59431/?token=8f3a...`
+- Windows/macOS 版无终端窗口（后台服务）；Linux 版终端输出的 URL 即入口
 
-### 常驻运行（开机自启，无需手动开终端）
+### 常驻运行（开机自启，日常零操作）
 
-终端窗口就是服务本体：**关窗口 = 停服务，窗口在 = 服务在**。配好下面两步，日常使用就是点图标进编辑器，全程零命令。
+Windows/macOS 版双击即后台服务，Linux 版终端就是服务本体（关窗口 = 停服务）。配好下面两步，日常使用就是开浏览器进编辑器，全程零命令。
 
 **第一步：固定地址（一次性）**
 
@@ -87,10 +76,9 @@ cargo build --release -p dddown-server
 
 Windows：
 
-- **启动文件夹**（最简）：`Win+R` 输入 `shell:startup` 回车，在打开的目录里给 `dddown.exe` 建快捷方式；右键快捷方式 → 属性，「目标」末尾追加参数（如 `--workspace D:\notes`），「起始位置」填 exe 所在目录。开机登录自动运行，最小化窗口即可
-- **任务计划程序**（要完全隐藏窗口）：`Win+R` 运行 `taskschd.msc` → 创建基本任务 → 触发器选「用户登录时」→ 操作选启动程序指向 `dddown.exe`（「起始于」填 exe 目录）→ 完成后在属性里勾选「隐藏」。要停止时用任务管理器结束 `dddown.exe`
+- **启动文件夹**（最简）：`Win+R` 输入 `shell:startup` 回车，在打开的目录里给 `dddown.exe` 建快捷方式；右键快捷方式 → 属性，「目标」末尾追加参数（如 `--workspace D:\笔记`），「起始位置」填 exe 所在目录。开机登录自动后台运行，无任何窗口
 
-macOS：系统设置 → 通用 → 登录项 → 添加 dddown 可执行文件；或写 LaunchAgent 实现开机自启与崩溃自动拉起。
+macOS：系统设置 → 通用 → 登录项 → 添加 DDDown.app；或写 LaunchAgent 实现开机自启与崩溃自动拉起。
 
 Linux：`systemctl --user enable --now dddown`（写一个 user unit 指向二进制路径即可）。
 
@@ -313,11 +301,11 @@ sidebar = "mod-shift-e"
 **怎么把笔记迁移走？**
 工作区就是普通目录，直接 `cp -r` 或打包。换个机器上改配置指向新路径即可。
 
-**关终端会断服务吗？**
-会，终端窗口就是服务进程本身。想让服务常驻：最小化窗口即可；想开机自动运行、全程不开终端，见「常驻运行」一节。
+**怎么退出服务？**
+Windows：任务管理器结束 `dddown.exe`；macOS：终端 `pkill dddown` 或活动监视器退出；Linux：关掉终端窗口即停。想开机自动运行、日常零操作，见「常驻运行」一节。
 
 **页面打不开，提示 404 或无法访问？**
-URL 里必须带完整 token；token 在每次启动时变化。从当前终端输出重新复制 URL。
+URL 里必须带完整 token；未配固定 token 时每次启动都会变，从浏览器地址栏或启动日志重新复制。
 
 ## 开发模式
 

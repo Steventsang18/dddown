@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>DDDown</string>
+	<key>CFBundleDisplayName</key>
+	<string>DDDown</string>
+	<key>CFBundleExecutable</key>
+	<string>dddown</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.3down.dddown</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleIconFile</key>
+	<string>dddown.icns</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<!-- 无界面的本地服务：不占 Dock，浏览器自动打开即入口；退出用活动监视器或 pkill dddown -->
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+</dict>
+</plist>

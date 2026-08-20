@@ -1,3 +1,6 @@
+// Windows release 产物隐藏控制台窗口：双击即后台服务，浏览器自动打开即入口
+#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
+
 mod config;
 mod embed;
 mod handler;
@@ -23,13 +26,14 @@ fn generate_token() -> String {
 }
 
 fn open_browser(url: &str) {
-    let cmd = if cfg!(target_os = "macos") {
-        "open"
-    } else if cfg!(target_os = "windows") {
-        "start"
-    } else {
-        "xdg-open"
-    };
+    // Windows 上 start 是 cmd 内建命令，不能直接当可执行文件拉起
+    if cfg!(target_os = "windows") {
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", "", url])
+            .spawn();
+        return;
+    }
+    let cmd = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
     let _ = std::process::Command::new(cmd).arg(url).spawn();
 }
 

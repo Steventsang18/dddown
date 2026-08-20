@@ -47,11 +47,18 @@ jobs:
       - name: Prepare asset
         shell: bash
         run: |
-          EXT=""
-          [[ "${{ matrix.os }}" == "windows-latest" ]] && EXT=".exe"
-          BIN="dddown-${{ github.ref_name }}-${{ matrix.label }}${EXT}"
-          cp "target/${{ matrix.target }}/release/dddown${EXT}" "$BIN"
-          echo "BIN=$BIN" >> $GITHUB_ENV
+          if [[ "${{ matrix.os }}" == macos-* ]]; then
+            # macOS 打成 DDDown.app + dmg，双击即用
+            VERSION="${{ github.ref_name }}"
+            ASSET="DDDown-${{ github.ref_name }}-${{ matrix.label }}.dmg"
+            bash packaging/package-mac.sh "target/${{ matrix.target }}/release/dddown" "${VERSION#v}" "$ASSET"
+          else
+            EXT=""
+            [[ "${{ matrix.os }}" == "windows-latest" ]] && EXT=".exe"
+            ASSET="dddown-${{ github.ref_name }}-${{ matrix.label }}${EXT}"
+            cp "target/${{ matrix.target }}/release/dddown${EXT}" "$ASSET"
+          fi
+          echo "BIN=$ASSET" >> $GITHUB_ENV
 
       - uses: softprops/action-gh-release@v2
         with:

@@ -27,7 +27,7 @@
 
 ## 快速开始
 
-**直接用**：到 [Releases](https://github.com/3Down/dddown/releases) 下载对应平台的单文件可执行程序，按 [安装指引](docs/USAGE.md#发布二进制从-github-release-下载推荐) 三步跑起来（含 Windows SmartScreen / macOS Gatekeeper 的处理）。
+**直接用**：到 [Releases](https://github.com/3Down/dddown/releases) 下载对应平台的产物（macOS dmg 拖装 / Windows exe 双击），按 [安装指引](docs/USAGE.md#发布二进制从-github-release-下载推荐) 三步跑起来（含 SmartScreen / Gatekeeper 的处理）。
 
 **从源码跑**：
 
@@ -41,7 +41,7 @@ cargo run
 
 终端打印带 token 的 URL 即入口。详见 [快速开始引导页](docs/quickstart.html)。
 
-> **Windows 提示**：终端窗口就是服务本体，最小化即可，关闭即退出；也可双击 `dddown.exe`（或建快捷方式）独立运行。推荐先在设置里设固定访问密码，重启后地址不变。想让服务开机自启、日常不开终端，见 [常驻运行指引](docs/USAGE.md#常驻运行开机自启无需手动开终端)。
+> **生命周期提示**：Windows/macOS 版双击即后台服务，无终端窗口，浏览器自动打开即入口；Linux 版终端窗口就是服务本体，最小化即可，关闭即退出。推荐先在设置里设固定访问密码，重启后地址不变。想开机自启、日常零操作，见 [常驻运行指引](docs/USAGE.md#常驻运行开机自启日常零操作)。
 
 ## 构建发布二进制
 
