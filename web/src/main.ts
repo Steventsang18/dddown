@@ -864,3 +864,8 @@ init().catch((err) => {
   console.error('[init] failed:', err);
   toast('初始化失败，请刷新页面', 'error');
 });
+
+// PWA：仅生产构建注册 Service Worker（dev 模式绝不缓存，避免污染开发）；?nosw=1 可禁用
+if (import.meta.env.PROD && 'serviceWorker' in navigator && !new URLSearchParams(location.search).has('nosw')) {
+  navigator.serviceWorker.register('/sw.js').catch(() => { /* 注册失败不影响主流程 */ });
+}

@@ -12,6 +12,14 @@ const DEFAULTS: ThemeState = { palette: 'book', dark: false, font: 'serif' };
 const PALETTE_LABEL: Record<string, string> = { book: '书卷', modern: '现代' };
 const FONT_LABEL: Record<string, string> = { serif: '宋体', sans: '无衬线' };
 
+// 与 editor.css 各主题的 --bg 保持一致，同步给 meta theme-color（PWA 标题栏随主题变色）
+const THEME_COLOR: Record<string, string> = {
+  'book-light': '#FAFAF7',
+  'book-dark': '#1E2128',
+  'modern-light': '#FFFFFF',
+  'modern-dark': '#1B1B22',
+};
+
 let state: ThemeState = load();
 let darkListener: ((dark: boolean) => void) | null = null;
 
@@ -36,6 +44,8 @@ function applyTheme(): void {
   body.classList.toggle('mode-dark', state.dark);
   body.classList.toggle('font-serif', state.font === 'serif');
   body.classList.toggle('font-sans', state.font === 'sans');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  meta?.setAttribute('content', THEME_COLOR[`${state.palette}-${state.dark ? 'dark' : 'light'}`]);
   persist();
   darkListener?.(state.dark);
 }

@@ -22,6 +22,7 @@
 - **可靠保存**：500ms 防抖自动保存、原子写盘、文件系统监听（外部修改同步、防回声循环）
 - **双主题 + 字体切换**：书卷（亮色宋体）与夜色（低饱和深蓝灰），随刷新记忆
 - **HTML 导出**：一键导出完全自包含的 HTML（CSS 内联、字体转 base64，离线可用）
+- **PWA 可安装**：manifest + Service Worker，可安装为独立桌面应用；静态资源全量缓存，秒开且后端短暂失联时页面壳仍可打开
 
 ## 快速开始
 
@@ -48,6 +49,15 @@ cargo build --release
 ./target/release/dddown --workspace ~/my-notes
 ```
 
+## 安装为桌面应用（PWA）
+
+启动服务后，浏览器访问带 token 的 URL，即可安装为独立应用：
+
+- **Chrome / Edge**：地址栏右侧安装图标，或菜单 → 「安装 dddown」
+- **macOS Safari**：分享菜单 → 「添加到程序坞」
+
+安装后从启动台/程序坞直接打开，独立窗口、无浏览器边框。Service Worker 缓存全部静态资源（缓存版本随构建自动轮换）；仅生产构建注册，开发模式不受影响，URL 加 `?nosw=1` 可随时禁用。
+
 ## 开发
 
 ```bash
@@ -67,7 +77,7 @@ cd web && npm run dev
 # Rust 单测（dddown-core 路径校验 + dddown-server 配置/搜索/片段）
 cargo test
 
-# 浏览器 E2E（12 条核心流程，隔离 HOME，固定端口 60101）
+# 浏览器 E2E（17 条核心流程，隔离 HOME，固定端口 60101）
 cd web && npm run test:e2e
 
 # 验证发布二进制（E2E 跑在 target/release/dddown 上）

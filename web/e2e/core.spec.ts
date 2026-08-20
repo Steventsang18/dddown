@@ -368,3 +368,39 @@ test('15. Markdown 导入：写入工作区并打开', async ({ page }) => {
   const del = await page.request.delete(`${API}/api/file?path=import-src.md&token=${TOKEN}`);
   expect(del.ok()).toBeTruthy();
 });
+
+test('16. PWA manifest：合法且图标齐全', async ({ page }) => {
+  await openApp(page);
+  const res = await page.request.get(`${API}/manifest.webmanifest`);
+  expect(res.ok()).toBeTruthy();
+  expect(res.headers()['content-type']).toContain('application/manifest+json');
+  const m = await res.json();
+  expect(m.name).toBe('dddown');
+  expect(m.display).toBe('standalone');
+  const sizes = m.icons.map((i: { sizes: string }) => i.sizes);
+  expect(sizes).toContain('192x192');
+  expect(sizes).toContain('512x512');
+  expect(m.icons.some((i: { purpose?: string }) => i.purpose === 'maskable')).toBeTruthy();
+  // 图标真实可访问
+  for (const icon of m.icons) {
+    expect((await page.request.get(`${API}${icon.src}`)).ok()).toBeTruthy();
+  }
+});
+
+test('17. Service Worker：生产构建注册并接管页面', async ({ page }) => {
+  await openApp(page);
+  // install 里 skipWaiting + activate 里 clients.claim，controller 非空即接管完成
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 10000 });
+  const reg = await page.evaluate(async () => {
+    const r = await navigator.serviceWorker.getRegistration('/');
+    return r ? { scope: r.scope, script: r.active?.scriptURL ?? '' } : null;
+  });
+  expect(reg).not.toBeNull();
+  expect(reg!.script).toContain('/sw.js');
+  // 缓存名含构建注入的版本号，非占位符
+  const cacheOk = await page.evaluate(async () => {
+    const keys = await caches.keys();
+    return keys.some((k) => /^dddown-[a-f0-9]{12}$/.test(k));
+  });
+  expect(cacheOk).toBeTruthy();
+});
