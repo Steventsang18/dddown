@@ -8,7 +8,11 @@ test-results
 *.swp
 *.swo
 *~
+nohup.out
 
 # 本地文档 & 构建产物
 PROJECT_REVIEW_*.md
 dddown-v*-macos-arm64
+
+# 桌面端 sidecar 二进制（CI 构建，不入库）
+crates/dddown-desktop/binaries/

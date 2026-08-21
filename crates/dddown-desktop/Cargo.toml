@@ -1,0 +1,19 @@
+[package]
+name = "dddown-desktop"
+version = "0.3.0-alpha.0"
+edition = "2021"
+
+[[bin]]
+name = "dddown-desktop"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-window-state = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+rand = { workspace = true }
+url = "2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }

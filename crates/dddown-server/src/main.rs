@@ -98,7 +98,11 @@ async fn main() {
     // 首次使用（空工作空间）写入欢迎文档，在 watcher 启动前完成，避免自身写入触发事件
     seed::seed_if_empty(&workspace).await;
 
-    let token = cfg.server.token.clone().unwrap_or_else(generate_token);
+    let token = std::env::var("MD_TOKEN")
+        .ok()
+        .filter(|t| !t.is_empty())
+        .or_else(|| cfg.server.token.clone())
+        .unwrap_or_else(generate_token);
     let (notify_tx, _notify_rx) = ws::create_notify_channel();
 
     let _watcher = watcher::FileWatcher::start(&workspace, notify_tx.clone())
@@ -141,7 +145,10 @@ async fn main() {
     println!("  {}", url);
     println!();
 
-    open_browser(&url);
+    // 桌面壳启动时设置 MD_NO_BROWSER，避免与 Tauri 窗口双重弹窗
+    if std::env::var_os("MD_NO_BROWSER").is_none() {
+        open_browser(&url);
+    }
 
     axum::serve(listener, app).await.unwrap();
 }

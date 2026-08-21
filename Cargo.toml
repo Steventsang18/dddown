@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/dddown-server", "crates/dddown-core"]
+members = ["crates/dddown-server", "crates/dddown-core", "crates/dddown-desktop"]
 resolver = "2"
 
 [workspace.dependencies]
