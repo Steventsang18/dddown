@@ -6,7 +6,7 @@
 
 文档导航：
 
-- **[快速开始](docs/quickstart.html)** — 从安装到上手的双语引导页（浏览器直接打开）
+- **[快速开始](https://stevensang18.github.io/dddown/quickstart.html)** — 从安装到上手的双语引导页（在线直接看）
 - **[使用说明](docs/USAGE.md)** — 功能、片段、快捷键、配置、FAQ
 - **[架构文档](docs/ARCHITECTURE.md)** — 技术栈、目录结构、通信协议、测试体系
 
@@ -39,7 +39,7 @@ cd web && npm install && npm run build && cd ..
 cargo run
 ```
 
-终端打印带 token 的 URL 即入口。详见 [快速开始引导页](docs/quickstart.html)。
+终端打印带 token 的 URL 即入口。详见 [快速开始引导页](https://stevensang18.github.io/dddown/quickstart.html)。
 
 > **生命周期提示**：Windows/macOS 版双击即后台服务，无终端窗口，浏览器自动打开即入口；Linux 版终端窗口就是服务本体，最小化即可，关闭即退出。推荐先在设置里设固定访问密码，重启后地址不变。想开机自启、日常零操作，见 [常驻运行指引](docs/USAGE.md#常驻运行开机自启日常零操作)。
 

@@ -6,7 +6,7 @@ dddown 是本地优先的 Markdown 编辑器：所有数据都在你自己的工
 
 ### 源码运行
 
-前置依赖：Rust stable、Node.js 18+。步骤见 [快速开始](quickstart.html)。
+前置依赖：Rust stable、Node.js 18+。步骤见 [快速开始](https://stevensang18.github.io/dddown/quickstart.html)。
 
 ### 发布二进制（从 GitHub Release 下载，推荐）
 

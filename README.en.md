@@ -6,7 +6,7 @@ A local-first Markdown editor. Rust backend + CodeMirror 6 + comrak WASM preview
 
 Docs:
 
-- **[Quick Start](docs/quickstart.html)** — bilingual onboarding guide (open directly in a browser)
+- **[Quick Start](https://stevensang18.github.io/dddown/quickstart.html)** — bilingual onboarding guide (read online)
 - **[Usage Guide](docs/USAGE.md)** — features, snippets, shortcuts, configuration, FAQ (Chinese)
 - **[Architecture](docs/ARCHITECTURE.md)** — tech stack, directory layout, protocols, testing (Chinese)
 
@@ -39,7 +39,7 @@ cd web && npm install && npm run build && cd ..
 cargo run
 ```
 
-The terminal prints a tokenized URL — that's your entry point. See the [Quick Start guide](docs/quickstart.html) for details.
+The terminal prints a tokenized URL — that's your entry point. See the [Quick Start guide](https://stevensang18.github.io/dddown/quickstart.html) for details.
 
 > **Lifecycle note**: on Windows/macOS a double-click starts a background service — no terminal window, the browser opens automatically as your entry point. On Linux the terminal window *is* the server — minimize it, don't close it. Setting a fixed access password first is recommended, so the URL survives restarts. For auto-start on boot (zero daily effort), see the [keep-running guide](docs/USAGE.md#常驻运行开机自启日常零操作).
 
