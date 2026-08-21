@@ -109,14 +109,6 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 // 只有系统注册成功才更新勾选状态
                 match result {
                     Ok(()) => {
-                        // enable/disable 后立即复查，暴露静默失败
-                        let recheck = autostart.is_enabled();
-                        eprintln!(
-                            "[autostart] {} -> Ok, recheck is_enabled={:?}, exe={:?}",
-                            if enabled { "disable" } else { "enable" },
-                            recheck,
-                            std::env::current_exe()
-                        );
                         if let Some(item) = AUTOSTART_ITEM.lock().unwrap().as_ref() {
                             let _ = item.set_checked(!enabled);
                         }
