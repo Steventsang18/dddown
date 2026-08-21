@@ -95,6 +95,9 @@ async fn api_write_file(
     Json(req): Json<WriteRequest>,
 ) -> Result<Json<WriteResponse>, StatusCode> {
     let ws = state.workspace.read().unwrap().clone();
+    if let Ok(w) = state.watcher.read() {
+        w.mark_self_write();
+    }
     handler::write_file(&ws, &req)
         .await
         .map(Json)
@@ -221,5 +224,6 @@ async fn ws_upgrade(
     }
     let rx = state.notify_tx.subscribe();
     let workspace = state.workspace.read().unwrap().clone();
-    Ok(ws.on_upgrade(move |socket| ws::handle_socket(socket, workspace, rx)))
+    let self_write = state.watcher.read().ok().map(|w| w.self_write_handle());
+    Ok(ws.on_upgrade(move |socket| ws::handle_socket(socket, workspace, rx, self_write)))
 }

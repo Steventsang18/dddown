@@ -480,10 +480,21 @@ function onSaved() {
   markClean();
 }
 
-function onConflict() {
-  // 保留用户未保存内容不强制覆盖，等待用户处理
-  saveTextEl.textContent = '⚠ 保存冲突：文件已被其他窗口修改，本次未写入';
-  toast('保存冲突：文件已被其他窗口修改，本次未写入', 'warn');
+async function onConflict() {
+  saveTextEl.textContent = '⚠ 保存冲突：正在恢复...';
+  // 读取磁盘最新内容，推进 baseHash 打破冲突死循环
+  if (currentFile) {
+    try {
+      const disk = await readFile(currentFile);
+      baseHash = fnv1a64(disk);
+    } catch { /* 读取失败则保持原状 */ }
+  }
+  // 自动重试保存（baseHash 已对齐磁盘，冲突检查将通过）
+  if (isDirty && currentFile && editorView) {
+    setTimeout(() => saveCurrentFile(), 50);
+  } else {
+    saveTextEl.textContent = '已保存';
+  }
 }
 
 // ========== 持久化工具 ==========

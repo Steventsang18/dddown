@@ -1,6 +1,8 @@
 use axum::extract::ws::{Message, WebSocket};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use tokio::sync::broadcast;
 
 use crate::handler;
@@ -40,6 +42,7 @@ pub async fn handle_socket(
     mut socket: WebSocket,
     workspace: PathBuf,
     mut rx: broadcast::Receiver<ServerMsg>,
+    self_write: Option<Arc<Mutex<Option<Instant>>>>,
 ) {
     loop {
         tokio::select! {
@@ -48,7 +51,7 @@ pub async fn handle_socket(
                 match incoming {
                     Some(Ok(msg)) => {
                         let Message::Text(text) = msg else { continue };
-                        if !handle_client_msg(&mut socket, &workspace, &text).await {
+                        if !handle_client_msg(&mut socket, &workspace, &text, &self_write).await {
                             break; // socket closed
                         }
                     }
@@ -70,7 +73,12 @@ pub async fn handle_socket(
 }
 
 /// 处理单条客户端消息，返回 false 表示连接应关闭
-async fn handle_client_msg(socket: &mut WebSocket, workspace: &PathBuf, text: &str) -> bool {
+async fn handle_client_msg(
+    socket: &mut WebSocket,
+    workspace: &PathBuf,
+    text: &str,
+    self_write: &Option<Arc<Mutex<Option<Instant>>>>,
+) -> bool {
     let Ok(client_msg) = serde_json::from_str::<ClientMsg>(text) else {
         let _ = socket.send(Message::Text(ServerMsg::Error {
             message: "invalid message".into(),
@@ -80,6 +88,12 @@ async fn handle_client_msg(socket: &mut WebSocket, workspace: &PathBuf, text: &s
 
     match client_msg {
         ClientMsg::Save { path, content, base_hash } => {
+            // 标记自身写入，抑制 watcher 回声
+            if let Some(sw) = self_write {
+                if let Ok(mut w) = sw.lock() {
+                    *w = Some(Instant::now());
+                }
+            }
             let req = crate::handler::WriteRequest { path, content, base_hash };
             let resp = match handler::write_file(workspace, &req).await {
                 Ok(resp) => ServerMsg::Saved { timestamp: resp.timestamp, path: req.path.clone() },
