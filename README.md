@@ -27,7 +27,9 @@
 
 ## 快速开始
 
-**直接用**：到 [Releases](https://github.com/3Down/dddown/releases) 下载对应平台的产物（macOS dmg 拖装 / Windows exe 双击），按 [安装指引](docs/USAGE.md#发布二进制从-github-release-下载推荐) 三步跑起来（含 SmartScreen / Gatekeeper 的处理）。
+**桌面端（推荐）**：到 [Releases](https://github.com/3Down/dddown/releases) 下载 `DDDown-aarch64.dmg`（Apple Silicon）或 `DDDown-x86_64.dmg`（Intel），拖装即用。原生 App 体验：Dock 图标、菜单栏托盘、开机自启、关窗隐藏。
+
+**服务端二进制**：到 [Releases](https://github.com/3Down/dddown/releases) 下载对应平台的产物（macOS dmg 拖装 / Windows exe 双击），按 [安装指引](docs/USAGE.md#发布二进制从-github-release-下载推荐) 三步跑起来（含 SmartScreen / Gatekeeper 的处理）。
 
 **从源码跑**：
 
@@ -95,8 +97,9 @@ cd web && E2E_BIN=release npm run test:e2e
 
 ```
 crates/
-  dddown-core/    # 路径校验等共享逻辑
-  dddown-server/  # axum 服务：文件 API、搜索、WebSocket、watcher、嵌入静态资源
+  dddown-core/      # 路径校验等共享逻辑
+  dddown-server/    # axum 服务：文件 API、搜索、WebSocket、watcher、嵌入静态资源
+  dddown-desktop/   # Tauri v2 桌面端壳（tray + autostart + sidecar server）
 web/
   src/        # CM6 编辑器、行内渲染、预览渲染、沉浸层、片段、快捷键
   e2e/        # Playwright E2E

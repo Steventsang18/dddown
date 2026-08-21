@@ -4,6 +4,27 @@ dddown 是本地优先的 Markdown 编辑器：所有数据都在你自己的工
 
 ## 安装与运行
 
+### 桌面端安装（原生 App，推荐）
+
+原生桌面应用，支持 Dock 图标、菜单栏托盘、开机自启、关窗隐藏。
+
+**macOS**
+
+1. 到 [Releases](https://github.com/3Down/dddown/releases) 下载 `DDDown-aarch64.dmg`（Apple Silicon M 系列）或 `DDDown-x86_64.dmg`（Intel）
+2. 打开 dmg，把 DDDown 拖进 Applications
+3. 双击启动。首次可能被 Gatekeeper 拦：系统设置 → 隐私与安全性 → 点「仍要打开」
+4. 浏览器自动打开编辑器。菜单栏出现 D 字托盘图标
+
+**桌面端特性**：
+
+- **关窗隐藏**：点窗口关闭按钮只是隐藏，服务继续运行。点菜单栏图标 → 「显示」恢复窗口
+- **开机自启**：点菜单栏图标 → 勾选「开机自启」，下次登录自动启动
+- **退出**：点菜单栏图标 → 「退出 DDDown」
+
+**Windows / Linux**
+
+桌面端目前仅 macOS 提供预编译包。Windows/Linux 用户可使用服务端二进制（见下节）或从源码构建桌面端。
+
 ### 源码运行
 
 前置依赖：Rust stable、Node.js 18+。步骤见 [快速开始](https://stevensang18.github.io/dddown/quickstart.html)。
@@ -72,7 +93,11 @@ Windows/macOS 版双击即后台服务，Linux 版终端就是服务本体（关
 
 之后入口恒为 `http://127.0.0.1:8123/?token=你的密码`，浏览器收藏或装成 PWA（地址栏安装图标）。
 
-**第二步：开机自启（三选一）**
+**第二步：开机自启**
+
+**桌面端**（推荐）：点菜单栏托盘图标 → 勾选「开机自启」。
+
+**服务端二进制**：
 
 Windows：
 
@@ -302,7 +327,8 @@ sidebar = "mod-shift-e"
 工作区就是普通目录，直接 `cp -r` 或打包。换个机器上改配置指向新路径即可。
 
 **怎么退出服务？**
-Windows：任务管理器结束 `dddown.exe`；macOS：终端 `pkill dddown` 或活动监视器退出；Linux：关掉终端窗口即停。想开机自动运行、日常零操作，见「常驻运行」一节。
+**桌面端**：点菜单栏托盘图标 → 「退出 DDDown」。关窗只是隐藏，不会退出。
+**服务端二进制**：Windows：任务管理器结束 `dddown.exe`；macOS：终端 `pkill dddown` 或活动监视器退出；Linux：关掉终端窗口即停。想开机自动运行、日常零操作，见「常驻运行」一节。
 
 **页面打不开，提示 404 或无法访问？**
 URL 里必须带完整 token；未配固定 token 时每次启动都会变，从浏览器地址栏或启动日志重新复制。
